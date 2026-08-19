@@ -11,6 +11,7 @@ import { useLanguage } from '@/components/language-provider';
 import { BrandPattern } from '@/components/brand-pattern';
 import { ScrollWordReveal } from '@/components/scroll-word-reveal';
 import { MorphingWordReveal } from '@/components/morphing-word-reveal';
+import { HeroCarousel } from '@/components/hero-carousel';
 import { home, routes } from '@/lib/i18n';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -225,49 +226,50 @@ export default function HomePage() {
         ref={heroRef}
         className="sticky top-0 relative flex min-h-screen w-full items-end overflow-hidden bg-background"
       >
-        <Image
-          src="/images/hero.png"
-          alt="Artisan hands stitching a premium leather shoe"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/100 via-black/20 to-black/80" />
-        <div className="relative mx-auto w-full max-w-7xl px-5 pb-16 pt-32 md:px-8 md:pb-24">
-          <div className="overflow-hidden">
-            <p className="hero-animate font-subheading text-xs uppercase tracking-[0.32em] text-background/80">
-              {t.heroEyebrow}
-            </p>
-          </div>
-          <div className="overflow-hidden mt-6">
-            <h1 className="hero-animate max-w-4xl text-balance font-serif text-4xl font-light leading-[1.05] text-background md:text-6xl lg:text-7xl">
-              {t.heroTitle}
-            </h1>
-          </div>
-          <div className="overflow-hidden mt-6">
-            <p className="hero-animate max-w-xl text-pretty text-base leading-relaxed text-background/85 md:text-lg">
-              {t.heroSubtitle}
-            </p>
-          </div>
-          <div className="overflow-hidden mt-9">
-            <div className="hero-animate flex flex-wrap items-center gap-4">
-              <Link
-                href={routes.about}
-                className="group inline-flex items-center gap-2 rounded-sm bg-background px-7 py-3.5 text-sm tracking-wide text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-              >
-                {t.heroCta}
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link
-                href={routes.products}
-                className="inline-flex items-center gap-2 rounded-sm border border-background/40 px-7 py-3.5 text-sm tracking-wide text-background transition-colors hover:bg-background/10"
-              >
-                {t.heroCtaSecondary}
-              </Link>
+        <HeroCarousel>
+          {(indicators) => (
+            <div className="relative mx-auto w-full max-w-7xl px-5 pb-16 pt-32 md:px-8 md:pb-24 pointer-events-none">
+              <div className="pointer-events-auto overflow-hidden">
+                <p className="hero-animate font-subheading text-xs uppercase tracking-[0.32em] text-background/80">
+                  {t.heroEyebrow}
+                </p>
+              </div>
+              <div className="pointer-events-auto overflow-hidden mt-6">
+                <h1 className="hero-animate max-w-4xl text-balance font-serif text-4xl font-light leading-[1.05] text-background md:text-6xl lg:text-7xl">
+                  {t.heroTitle}
+                </h1>
+              </div>
+              <div className="pointer-events-auto overflow-hidden mt-6">
+                <p className="hero-animate max-w-xl text-pretty text-base leading-relaxed text-background/85 md:text-lg">
+                  {t.heroSubtitle}
+                </p>
+              </div>
+              <div className="pointer-events-auto overflow-hidden mt-9">
+                <div className="hero-animate flex flex-wrap items-end justify-between gap-8 md:gap-12">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Link
+                      href={routes.about}
+                      className="group inline-flex items-center gap-2 rounded-sm bg-background px-7 py-3.5 text-sm tracking-wide text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                    >
+                      {t.heroCta}
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                    <Link
+                      href={routes.products}
+                      className="inline-flex items-center gap-2 rounded-sm border border-background/40 px-7 py-3.5 text-sm tracking-wide text-background transition-colors hover:bg-background/10"
+                    >
+                      {t.heroCtaSecondary}
+                    </Link>
+                  </div>
+                  {/* Progress indicators right aligned with buttons base */}
+                  <div className="flex w-full md:w-auto justify-start md:justify-end pb-3 md:pb-4">
+                    {indicators}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        </HeroCarousel>
       </section>
 
       {/* Intro */}

@@ -9,6 +9,7 @@ export const nav = {
     products: 'Collections',
     contact: 'Contact',
     enquire: 'Enquire',
+    blog: 'Journal',
   },
   es: {
     home: 'Inicio',
@@ -18,6 +19,7 @@ export const nav = {
     products: 'Colecciones',
     contact: 'Contacto',
     enquire: 'Contactar',
+    blog: 'Diario',
   },
 } as const
 
@@ -28,6 +30,7 @@ export const routes = {
   craft: '/craftsmanship',
   products: '/collections',
   contact: '/contact',
+  blog: '/journal',
 } as const
 
 export const home = {
@@ -454,3 +457,296 @@ export const footer = {
     rights: 'Todos los derechos reservados.',
   },
 } as const
+
+export const blogData = {
+  en: {
+    eyebrow: 'Journal',
+    title: 'Stories, heritage, and events.',
+    filters: ['All', 'Heritage', 'Events', 'Collection', 'Celebrities'],
+    readMore: 'Discover more',
+    backToList: 'Back to listing',
+  },
+  es: {
+    eyebrow: 'Diario',
+    title: 'Historias, herencia y eventos.',
+    filters: ['Todos', 'Herencia', 'Eventos', 'Colección', 'Celebridades'],
+    readMore: 'Descubre más',
+    backToList: 'Volver a la lista',
+  },
+} as const
+
+export type BlogCategory = 'Heritage' | 'Events' | 'Collection' | 'Celebrities' | 'Herencia' | 'Eventos' | 'Colección' | 'Celebridades'
+
+export const mockBlogs = [
+  {
+    id: '1',
+    slug: 'the-art-of-shoemaking',
+    category: { en: 'Heritage', es: 'Herencia' },
+    title: {
+      en: 'The Art of Shoemaking: A Century of Craft',
+      es: 'El Arte de la Zapatería: Un Siglo de Oficio',
+    },
+    excerpt: {
+      en: 'Exploring the roots of traditional cobbling in León and how it shapes our modern approach.',
+      es: 'Explorando las raíces de la zapatería tradicional en León y cómo moldea nuestro enfoque moderno.',
+    },
+    image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '2',
+    slug: 'spring-collection-2027',
+    category: { en: 'Collection', es: 'Colección' },
+    title: {
+      en: 'Kinetic Chic - Spring Collection 2027',
+      es: 'Kinetic Chic - Colección Primavera 2027',
+    },
+    excerpt: {
+      en: 'A manifesto that pays tribute to the brand\'s history while looking firmly toward the future.',
+      es: 'Un manifiesto que rinde homenaje a la historia de la marca mientras mira firmemente hacia el futuro.',
+    },
+    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '3',
+    slug: 'gala-dinner-milan',
+    category: { en: 'Events', es: 'Eventos' },
+    title: {
+      en: 'The Annual Gala Dinner in Milan',
+      es: 'La Cena de Gala Anual en Milán',
+    },
+    excerpt: {
+      en: 'Celebrating a year of achievements with our partners in the heart of Italy.',
+      es: 'Celebrando un año de logros con nuestros socios en el corazón de Italia.',
+    },
+    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1519671482749-fd098f392a56?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '4',
+    slug: 'sophia-laurent-campaign',
+    category: { en: 'Celebrities', es: 'Celebridades' },
+    title: {
+      en: 'Sophia Laurent is the new Face of the Brand',
+      es: 'Sophia Laurent es el nuevo Rostro de la Marca',
+    },
+    excerpt: {
+      en: 'We are thrilled to announce Sophia Laurent as the global ambassador for our upcoming campaign.',
+      es: 'Estamos encantados de anunciar a Sophia Laurent como embajadora global de nuestra próxima campaña.',
+    },
+    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '5',
+    slug: 'sustainable-leather-sourcing',
+    category: { en: 'Heritage', es: 'Herencia' },
+    title: {
+      en: 'Sustainable Leather Sourcing',
+      es: 'Abastecimiento de Piel Sustentable',
+    },
+    excerpt: {
+      en: 'Our commitment to the environment through responsible material selection.',
+      es: 'Nuestro compromiso con el medio ambiente a través de una selección responsable de materiales.',
+    },
+    image: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1584916201218-f4242ceb4809?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '6',
+    slug: 'winter-capsule-2026',
+    category: { en: 'Collection', es: 'Colección' },
+    title: {
+      en: 'The Fall/Winter 2026 Runway Show',
+      es: 'El Desfile Otoño/Invierno 2026',
+    },
+    excerpt: {
+      en: 'Exploring themes of modern utilitarian elegance with a hint of gothic chic.',
+      es: 'Explorando temas de elegancia utilitaria moderna con un toque de chic gótico.',
+    },
+    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1485230895905-efd5b78f8cb1?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '7',
+    slug: 'flagship-store-opening',
+    category: { en: 'Events', es: 'Eventos' },
+    title: {
+      en: 'Paris Avenue Montaigne Store',
+      es: 'Tienda en la Avenida Montaigne de París',
+    },
+    excerpt: {
+      en: 'In the landmark year of our anniversary, we announce the re-opening of our Paris store.',
+      es: 'En el año emblemático de nuestro aniversario, anunciamos la reapertura de nuestra tienda en París.',
+    },
+    image: 'https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '8',
+    slug: 'art-prize-winner',
+    category: { en: 'Events', es: 'Eventos' },
+    title: {
+      en: 'Art Prize For Women 10th Edition Winner',
+      es: 'Ganadora de la 10ª Edición del Premio de Arte para Mujeres',
+    },
+    excerpt: {
+      en: 'We are pleased to announce Dian Suci as the named artist winner of the tenth edition.',
+      es: 'Nos complace anunciar a Dian Suci como la artista ganadora de la décima edición.',
+    },
+    image: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '9',
+    slug: 'rococo-modern',
+    category: { en: 'Collection', es: 'Colección' },
+    title: {
+      en: 'Rococo Modern',
+      es: 'Rococó Moderno',
+    },
+    excerpt: {
+      en: 'Spring Summer 2026 takes inspiration from another star in our pantheon of remarkable women.',
+      es: 'Primavera Verano 2026 se inspira en otra estrella de nuestro panteón de mujeres notables.',
+    },
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1509631179647-0c739cb54f19?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '10',
+    slug: 'behind-the-seams',
+    category: { en: 'Heritage', es: 'Herencia' },
+    title: {
+      en: 'Behind the Seams: The Workshop',
+      es: 'Detrás de las Costuras: El Taller',
+    },
+    excerpt: {
+      en: 'A closer look at the daily routines and meticulous craftsmanship in our local atelier.',
+      es: 'Un vistazo más de cerca a las rutinas diarias y la meticulosa artesanía en nuestro taller local.',
+    },
+    image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1527689368864-3a821dbccc34?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1534062013824-00d3d5f308ce?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '11',
+    slug: 'red-carpet-moments',
+    category: { en: 'Celebrities', es: 'Celebridades' },
+    title: {
+      en: 'Red Carpet Moments: The Oscars',
+      es: 'Momentos de Alfombra Roja: Los Oscars',
+    },
+    excerpt: {
+      en: 'Spotlighting the bespoke pieces worn by acclaimed actors at this year\'s Academy Awards.',
+      es: 'Destacando las piezas a medida usadas por actores aclamados en los Premios de la Academia de este año.',
+    },
+    image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1563813725515-3739cc5032b4?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1518049362265-d5b2a6467637?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '12',
+    slug: 'summer-essentials',
+    category: { en: 'Collection', es: 'Colección' },
+    title: {
+      en: 'Summer Essentials: The Loafer',
+      es: 'Esenciales de Verano: El Mocasín',
+    },
+    excerpt: {
+      en: 'Why the classic loafer remains the cornerstone of every versatile summer wardrobe.',
+      es: 'Por qué el clásico mocasín sigue siendo la piedra angular de todo guardarropa de verano versátil.',
+    },
+    image: 'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1603487742131-4160ec999306?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '13',
+    slug: 'innovation-in-design',
+    category: { en: 'Heritage', es: 'Herencia' },
+    title: {
+      en: 'Innovation in Design: 3D Prototyping',
+      es: 'Innovación en el Diseño: Prototipado 3D',
+    },
+    excerpt: {
+      en: 'How modern digital tools are seamlessly integrating with traditional pattern making.',
+      es: 'Cómo las modernas herramientas digitales se integran a la perfección con el patronaje tradicional.',
+    },
+    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1581092335397-9583eb92d232?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '14',
+    slug: 'charity-auction',
+    category: { en: 'Events', es: 'Eventos' },
+    title: {
+      en: 'Annual Charity Auction in London',
+      es: 'Subasta Anual de Caridad en Londres',
+    },
+    excerpt: {
+      en: 'A beautiful evening dedicated to raising funds for emerging artisans worldwide.',
+      es: 'Una hermosa noche dedicada a recaudar fondos para artesanos emergentes de todo el mundo.',
+    },
+    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1505236858219-8359eb29e329?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1519671482749-fd098f392a56?q=80&w=800&auto=format&fit=crop'
+    ]
+  },
+  {
+    id: '15',
+    slug: 'interview-lead-designer',
+    category: { en: 'Celebrities', es: 'Celebridades' },
+    title: {
+      en: 'An Interview with Our Lead Designer',
+      es: 'Una Entrevista con Nuestro Diseñador Principal',
+    },
+    excerpt: {
+      en: 'Discover the inspirations and creative process behind the upcoming collections.',
+      es: 'Descubre las inspiraciones y el proceso creativo detrás de las próximas colecciones.',
+    },
+    image: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=800&auto=format&fit=crop',
+    contentImages: [
+      'https://images.unsplash.com/photo-1552581234-26160f608093?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop'
+    ]
+  }
+];
+
