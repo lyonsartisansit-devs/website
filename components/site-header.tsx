@@ -15,6 +15,19 @@ export function SiteHeader() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+
+  const isComingSoon =
+    process.env.NEXT_PUBLIC_COMING_SOON === 'true' ||
+    process.env.COMING_SOON === 'true' ||
+    pathname === '/coming-soon' ||
+    pathname === '/under-construction'
+
+  if (isComingSoon) {
+    return null
+  }
+
+
+
   const t = nav[lang]
   const isTransparent = pathname === routes.home && !scrolled && !open
   const headerRef = useRef<HTMLElement>(null)

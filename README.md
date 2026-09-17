@@ -40,7 +40,25 @@ A premium, interactive e-commerce and brand experience website built for a high-
 
 ## 📁 Project Structure
 
-- `/app`: Next.js App Router pages (Home, Who We Are, Collections, Contact).
-- `/components`: Reusable UI components (PageHeader, Loaders, GSAP reveal animations).
+- `/app`: Next.js App Router pages (Home, Coming Soon, Who We Are, Collections, Contact).
+- `/components`: Reusable UI components (UnderConstruction, PageHeader, Loaders, GSAP reveal animations).
 - `/public/images`: Static assets, including custom AI-generated leather textures.
 - `/lib`: Utilities and localization dictionaries (`i18n.ts`).
+- `middleware.ts`: Next.js middleware handling conditional Coming Soon rewrites based on environment variables.
+
+## 🔒 Coming Soon / Under Construction Mode
+
+The project includes a toggleable "Coming Soon" landing page managed via environment variables:
+
+- **Local Environment (`.env.local`):**
+  Set `NEXT_PUBLIC_COMING_SOON=true` and `COMING_SOON=true` to enable Coming Soon mode, or set both to `false` to display the full website.
+
+- **Vercel Deployment Configuration:**
+  To toggle Coming Soon mode (and automatic Header/Footer hiding) in production on Vercel without changing code:
+  1. Go to your Vercel project: **Settings > Environment Variables**.
+  2. Add key: `NEXT_PUBLIC_COMING_SOON` with value: `true` (or `false`).
+  3. Add key: `COMING_SOON` with value: `true` (or `false`).
+  4. Select **Production** environment (and Preview if desired).
+  5. Save and redeploy the site.
+
+

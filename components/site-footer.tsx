@@ -1,11 +1,27 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useLanguage } from '@/components/language-provider'
 import { footer, nav, routes } from '@/lib/i18n'
 
+
 export function SiteFooter() {
   const { lang } = useLanguage()
+  const pathname = usePathname()
+
+  const isComingSoon =
+    process.env.NEXT_PUBLIC_COMING_SOON === 'true' ||
+    process.env.COMING_SOON === 'true' ||
+    pathname === '/coming-soon' ||
+    pathname === '/under-construction'
+
+  if (isComingSoon) {
+    return null
+  }
+
+
+
   const f = footer[lang]
   const n = nav[lang]
   const year = new Date().getFullYear()
