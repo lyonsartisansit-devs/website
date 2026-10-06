@@ -14,6 +14,7 @@ export function UnderConstruction() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const modalContentRef = useRef<HTMLDivElement>(null);
@@ -25,12 +26,14 @@ export function UnderConstruction() {
       eyebrow: 'LEÓN, MÉXICO · EST. MANUFACTURE',
       titleLine1: 'A new',
       titleLine2: 'standard.',
-      subtitle: 'Premium footwear and leather goods, made by hand in one of the world\'s great shoemaking capitals.',
+      subtitle:
+        "Premium footwear and leather goods, made by hand in one of the world's great shoemaking capitals.",
       startConversation: 'START A CONVERSATION',
       getTheFirstLook: 'GET THE FIRST LOOK',
       modalTag: '02 / THE INVITATION',
       modalTitle: 'Stay close.',
-      modalSubtitle: 'Leave your email for the first collection reveal, studio notes, and a direct line to the house in León.',
+      modalSubtitle:
+        'Leave your email for the first collection reveal, studio notes, and a direct line to the house in León.',
       modalFormTitle: 'Request the first look',
       modalFormLabel: 'BUSINESS EMAIL',
       modalPlaceholder: 'you@company.com',
@@ -38,7 +41,9 @@ export function UnderConstruction() {
       modalSending: 'SENDING...',
       modalMicrocopy: 'One thoughtful update. No noise.',
       modalSubmittedTitle: 'You are on the list.',
-      modalSubmittedText: 'Thank you. We will share the first collection reveal and private studio notes directly with you.',
+      modalSubmittedText:
+        'Thank you. We will share the first collection reveal and private studio notes directly with you.',
+      modalError: 'Unable to complete your request. Please try again.',
       modalDarkLeft1: 'LEÓN, GUANAJUATO',
       modalDarkLeft2: 'MÉXICO · 2026',
       modalDarkRightTitle: 'START A CONVERSATION',
@@ -50,12 +55,14 @@ export function UnderConstruction() {
       eyebrow: 'LEÓN, MÉXICO · MANUFACTURA EST.',
       titleLine1: 'Un nuevo',
       titleLine2: 'estándar.',
-      subtitle: 'Calzado y artículos de piel premium, hechos a mano en una de las grandes capitales zapateras del mundo.',
+      subtitle:
+        'Calzado y artículos de piel premium, hechos a mano en una de las grandes capitales zapateras del mundo.',
       startConversation: 'INICIAR CONVERSACIÓN',
       getTheFirstLook: 'PRIMER VISTAZO',
       modalTag: '02 / LA INVITACIÓN',
       modalTitle: 'Mantente cerca.',
-      modalSubtitle: 'Deja tu correo para la revelación de la primera colección, notas de estudio y una línea directa con la casa en León.',
+      modalSubtitle:
+        'Deja tu correo para la revelación de la primera colección, notas de estudio y una línea directa con la casa en León.',
       modalFormTitle: 'Solicita el primer vistazo',
       modalFormLabel: 'CORREO INSTITUCIONAL',
       modalPlaceholder: 'tu@empresa.com',
@@ -63,12 +70,15 @@ export function UnderConstruction() {
       modalSending: 'ENVIANDO...',
       modalMicrocopy: 'Una actualización pensada. Sin ruido.',
       modalSubmittedTitle: 'Estás en la lista.',
-      modalSubmittedText: 'Gracias. Compartiremos la revelación de la primera colección y notas privadas del estudio directamente contigo.',
+      modalSubmittedText:
+        'Gracias. Compartiremos la revelación de la primera colección y notas privadas del estudio directamente contigo.',
+      modalError:
+        'No se pudo completar la solicitud. Por favor intenta de nuevo.',
       modalDarkLeft1: 'LEÓN, GUANAJUATO',
       modalDarkLeft2: 'MÉXICO · 2026',
       modalDarkRightTitle: 'INICIAR CONVERSACIÓN',
       close: 'CERRAR',
-    }
+    },
   };
 
   const t = content[lang];
@@ -94,7 +104,7 @@ export function UnderConstruction() {
 
   const handleCloseModal = () => {
     if (!modalRef.current) return;
-    
+
     // Animate radial circle shrinking back to click origin
     gsap.to(modalRef.current, {
       clipPath: `circle(0px at ${circleOrigin.x}px ${circleOrigin.y}px)`,
@@ -103,53 +113,74 @@ export function UnderConstruction() {
       ease: 'power3.inOut',
       onComplete: () => {
         setIsModalOpen(false);
-      }
+      },
     });
   };
 
-  useGSAP(() => {
-    if (isModalOpen && modalRef.current) {
-      // 1. Radial expand animation
-      gsap.fromTo(
-        modalRef.current,
-        {
-          clipPath: `circle(0px at ${circleOrigin.x}px ${circleOrigin.y}px)`,
-          opacity: 1,
-        },
-        {
-          clipPath: `circle(160vmax at ${circleOrigin.x}px ${circleOrigin.y}px)`,
-          duration: 0.85,
-          ease: 'power3.inOut',
-        }
-      );
-
-      // 2. Stagger content elements inside modal
-      if (modalContentRef.current) {
-        const elements = modalContentRef.current.querySelectorAll('.modal-anim');
+  useGSAP(
+    () => {
+      if (isModalOpen && modalRef.current) {
+        // 1. Radial expand animation
         gsap.fromTo(
-          elements,
-          { y: 30, opacity: 0 },
+          modalRef.current,
           {
-            y: 0,
+            clipPath: `circle(0px at ${circleOrigin.x}px ${circleOrigin.y}px)`,
             opacity: 1,
-            duration: 0.7,
-            stagger: 0.08,
-            ease: 'power2.out',
-            delay: 0.2,
-          }
+          },
+          {
+            clipPath: `circle(160vmax at ${circleOrigin.x}px ${circleOrigin.y}px)`,
+            duration: 0.85,
+            ease: 'power3.inOut',
+          },
         );
-      }
-    }
-  }, { dependencies: [isModalOpen] });
 
-  const handleSubmit = (e: React.FormEvent) => {
+        // 2. Stagger content elements inside modal
+        if (modalContentRef.current) {
+          const elements =
+            modalContentRef.current.querySelectorAll('.modal-anim');
+          gsap.fromTo(
+            elements,
+            { y: 30, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 0.7,
+              stagger: 0.08,
+              ease: 'power2.out',
+              delay: 0.2,
+            },
+          );
+        }
+      }
+    },
+    { dependencies: [isModalOpen] },
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes('@')) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, lang }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || t.modalError);
+      }
+
       setSubmitted(true);
-    }, 600);
+    } catch (err: any) {
+      console.error('Subscription error:', err);
+      setErrorMessage(err?.message || t.modalError);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -162,7 +193,9 @@ export function UnderConstruction() {
           type="button"
           onClick={() => setLang('en')}
           className={`px-1.5 transition-colors hover:text-white cursor-pointer ${
-            lang === 'en' ? 'text-white font-bold underline underline-offset-4' : 'text-[#EBE4D8]/60'
+            lang === 'en'
+              ? 'text-white font-bold underline underline-offset-4'
+              : 'text-[#EBE4D8]/60'
           }`}
           aria-label="Switch to English"
         >
@@ -173,7 +206,9 @@ export function UnderConstruction() {
           type="button"
           onClick={() => setLang('es')}
           className={`px-1.5 transition-colors hover:text-white cursor-pointer ${
-            lang === 'es' ? 'text-white font-bold underline underline-offset-4' : 'text-[#EBE4D8]/60'
+            lang === 'es'
+              ? 'text-white font-bold underline underline-offset-4'
+              : 'text-[#EBE4D8]/60'
           }`}
           aria-label="Cambiar a Español"
         >
@@ -184,7 +219,7 @@ export function UnderConstruction() {
       {/* ========================================================================= */}
       {/* 1. HERO UNDER CONSTRUCTION PAGE (Image 2 Replica)                        */}
       {/* ========================================================================= */}
-      
+
       {/* Background Image & Overlays */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         {/* Main Background Image */}
@@ -206,13 +241,54 @@ export function UnderConstruction() {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <circle cx="700" cy="550" r="180" stroke="url(#goldLine)" strokeWidth="1" strokeDasharray="4 4" />
-          <circle cx="700" cy="550" r="280" stroke="url(#goldLine)" strokeWidth="1" />
-          <circle cx="700" cy="550" r="390" stroke="url(#goldLine)" strokeWidth="1.5" opacity="0.8" />
-          <circle cx="700" cy="550" r="510" stroke="url(#goldLine)" strokeWidth="1" strokeDasharray="8 6" />
-          <circle cx="700" cy="550" r="640" stroke="url(#goldLine)" strokeWidth="1" opacity="0.5" />
+          <circle
+            cx="700"
+            cy="550"
+            r="180"
+            stroke="url(#goldLine)"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+          />
+          <circle
+            cx="700"
+            cy="550"
+            r="280"
+            stroke="url(#goldLine)"
+            strokeWidth="1"
+          />
+          <circle
+            cx="700"
+            cy="550"
+            r="390"
+            stroke="url(#goldLine)"
+            strokeWidth="1.5"
+            opacity="0.8"
+          />
+          <circle
+            cx="700"
+            cy="550"
+            r="510"
+            stroke="url(#goldLine)"
+            strokeWidth="1"
+            strokeDasharray="8 6"
+          />
+          <circle
+            cx="700"
+            cy="550"
+            r="640"
+            stroke="url(#goldLine)"
+            strokeWidth="1"
+            opacity="0.5"
+          />
           <defs>
-            <linearGradient id="goldLine" x1="200" y1="200" x2="900" y2="900" gradientUnits="userSpaceOnUse">
+            <linearGradient
+              id="goldLine"
+              x1="200"
+              y1="200"
+              x2="900"
+              y2="900"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop stopColor="#E4D9CA" stopOpacity="0.8" />
               <stop offset="0.5" stopColor="#B5926F" stopOpacity="0.5" />
               <stop offset="1" stopColor="#6D4835" stopOpacity="0.1" />
@@ -224,14 +300,17 @@ export function UnderConstruction() {
       {/* Top Header Bar (Uncluttered & Clean) */}
       <header className="relative z-20 w-full px-6 py-6 md:px-12 md:py-8 flex items-center justify-between">
         {/* Left: Logo Brand Image */}
-        <Link href="/" className="flex items-center gap-4 group" aria-label="Lyon's Artisans home">
+        <Link
+          href="/"
+          className="flex items-center gap-4 group"
+          aria-label="Lyon's Artisans home"
+        >
           <img
             src="/logo-STONE.svg"
             alt="Lyon's Artisans"
             className="h-10 sm:h-12 md:h-14 w-auto max-w-[180px] sm:max-w-[220px] md:max-w-[250px] object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </Link>
-
 
         {/* Center: Status Badge */}
         <div className="hidden md:flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-white/10 bg-black/20 backdrop-blur-md">
@@ -264,7 +343,8 @@ export function UnderConstruction() {
 
           {/* Headline */}
           <h1 className="font-serif text-6xl sm:text-7xl md:text-8xl lg:text-[9.5rem] font-normal tracking-tight text-[#F3EFE7] leading-[0.92] mb-8">
-            {t.titleLine1}<br />
+            {t.titleLine1}
+            <br />
             {t.titleLine2}
           </h1>
 
@@ -315,17 +395,24 @@ export function UnderConstruction() {
           }}
         >
           {/* Inner Content Wrapper */}
-          <div ref={modalContentRef} className="relative w-full min-h-screen flex flex-col justify-between">
+          <div
+            ref={modalContentRef}
+            className="relative w-full min-h-screen flex flex-col justify-between"
+          >
             {/* Top Navigation inside Modal */}
             <div className="w-full px-6 py-6 md:px-12 md:py-8 flex items-center justify-between border-b border-[#D8CDBE]/60">
               <div className="modal-anim flex items-center gap-3">
-                <svg width="24" height="28" viewBox="0 0 54 66" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[#191512]">
-                  <path d="M12 4V58H32V50H20V4H12Z" fill="currentColor"/>
-                  <path d="M38 4L22 58H31L47 4H38Z" fill="currentColor"/>
-                  <path d="M28 36H48V44H28V36Z" fill="currentColor"/>
-                </svg>
-                <div className="h-6 w-[1px] bg-[#191512]/30" />
-                <span className="font-serif text-xs tracking-[0.25em] text-[#191512] uppercase font-semibold">LYON&apos;S ARTISANS</span>
+                <Link
+                  href="/"
+                  className="flex items-center gap-4 group"
+                  aria-label="Lyon's Artisans home"
+                >
+                  <img
+                    src="/logo-noir-2.svg"
+                    alt="Lyon's Artisans"
+                    className="h-10 sm:h-12 md:h-14 w-auto max-w-[180px] sm:max-w-[220px] md:max-w-[250px] object-contain transition-transform duration-300 group-hover:scale-105"
+                  />
+                </Link>
               </div>
 
               {/* Close Modal Button */}
@@ -365,7 +452,10 @@ export function UnderConstruction() {
                   </h3>
 
                   {!submitted ? (
-                    <form onSubmit={handleSubmit} className="modal-anim space-y-4">
+                    <form
+                      onSubmit={handleSubmit}
+                      className="modal-anim space-y-4"
+                    >
                       <label className="block text-[11px] font-bold tracking-[0.2em] uppercase text-[#736555]">
                         {t.modalFormLabel}
                       </label>
@@ -384,7 +474,9 @@ export function UnderConstruction() {
                           disabled={loading}
                           className="group inline-flex items-center gap-2 text-xs sm:text-sm font-bold tracking-[0.18em] uppercase text-[#191512] hover:text-[#6D4835] transition-colors whitespace-nowrap cursor-pointer ml-4"
                         >
-                          <span>{loading ? t.modalSending : t.modalKeepMeClose}</span>
+                          <span>
+                            {loading ? t.modalSending : t.modalKeepMeClose}
+                          </span>
                           <ArrowRight className="size-4 text-[#191512] transition-transform duration-300 group-hover:translate-x-1" />
                         </button>
                       </div>
@@ -392,6 +484,12 @@ export function UnderConstruction() {
                       <p className="text-xs text-[#736555] font-light pt-2">
                         {t.modalMicrocopy}
                       </p>
+
+                      {errorMessage && (
+                        <div className="p-3 rounded bg-[#FAF2ED] border border-[#D98E7B]/40 text-[#9C3826] text-xs leading-relaxed">
+                          {errorMessage}
+                        </div>
+                      )}
                     </form>
                   ) : (
                     <div className="modal-anim p-6 sm:p-8 rounded-lg bg-[#EAE0D3] border border-[#CFC1B0] space-y-3">
@@ -399,7 +497,9 @@ export function UnderConstruction() {
                         <div className="size-8 rounded-full bg-[#191512] text-[#F3EFE7] flex items-center justify-center">
                           <Check className="size-5" />
                         </div>
-                        <h4 className="font-serif text-xl">{t.modalSubmittedTitle}</h4>
+                        <h4 className="font-serif text-xl">
+                          {t.modalSubmittedTitle}
+                        </h4>
                       </div>
                       <p className="text-sm text-[#524940] font-light leading-relaxed">
                         {t.modalSubmittedText}
@@ -428,16 +528,17 @@ export function UnderConstruction() {
 
                 {/* Center Section: Logo */}
                 <div className="flex items-center justify-center gap-3">
-                  <svg width="22" height="26" viewBox="0 0 54 66" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[#EBE4D8]">
-                    <path d="M12 4V58H32V50H20V4H12Z" fill="currentColor"/>
-                    <path d="M38 4L22 58H31L47 4H38Z" fill="currentColor"/>
-                    <path d="M28 36H48V44H28V36Z" fill="currentColor"/>
-                  </svg>
-                  <div className="h-5 w-[1px] bg-[#EBE4D8]/30" />
-                  <div className="flex flex-col leading-none text-left">
-                    <span className="font-serif text-xs tracking-[0.25em] text-[#EBE4D8] uppercase font-semibold">LYON&apos;S</span>
-                    <span className="text-[8px] tracking-[0.35em] text-[#C4B7A6] uppercase font-light">ARTISANS</span>
-                  </div>
+                  <Link
+                    href="/"
+                    className="flex items-center gap-4 group"
+                    aria-label="Lyon's Artisans home"
+                  >
+                    <img
+                      src="/logo-STONE.svg"
+                      alt="Lyon's Artisans"
+                      className="h-10 sm:h-12 md:h-14 w-auto max-w-[180px] sm:max-w-[220px] md:max-w-[250px] object-contain transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </Link>
                 </div>
 
                 {/* Right Section: Contact info */}
