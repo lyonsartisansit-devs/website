@@ -1,92 +1,118 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
+import { Link, usePathname, useRouter, type Locale } from '@/i18n/routing'
 import { Menu, X } from 'lucide-react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { cn } from '@/lib/utils'
-import { useLanguage } from '@/components/language-provider'
-import { nav, routes } from '@/lib/i18n'
+import { useTranslationsContext } from '@/components/translations-provider'
 
 export function SiteHeader() {
-  const { lang, setLang } = useLanguage()
+  const t = useTranslations('nav')
+  const locale = useLocale() as Locale
   const pathname = usePathname()
+  const router = useRouter()
+  const { translations } = useTranslationsContext()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
   const isComingSoon =
     process.env.NEXT_PUBLIC_COMING_SOON === 'true' ||
     process.env.COMING_SOON === 'true' ||
-    pathname === '/coming-soon' ||
-    pathname === '/under-construction'
+    pathname.includes('/coming-soon') ||
+    pathname.includes('/under-construction')
 
   if (isComingSoon) {
     return null
   }
 
-
-
-  const t = nav[lang]
-  const isTransparent = pathname === routes.home && !scrolled && !open
+  const isHome = pathname === '/' || pathname === ''
+  const isTransparent = isHome && !scrolled && !open
   const headerRef = useRef<HTMLElement>(null)
 
-  useGSAP(() => {
-    // Solo animar si estamos en la página de inicio
-    if (pathname !== routes.home) return
-    
-    // Si ya se vio el intro en esta sesión, no animar
-    if (sessionStorage.getItem('hasSeenLoader')) return
+  useGSAP(
+    () => {
+      // Only animate on home page
+      if (!isHome) return
 
-    const elements = gsap.utils.toArray('.nav-animate')
-    
-    // Ocultar elementos inicialmente
-    gsap.set(elements, { y: -30, opacity: 0 })
+      // If intro already seen in this session, skip animation
+      if (typeof window !== 'undefined' && sessionStorage.getItem('hasSeenLoader')) return
 
-    const playIntro = () => {
-      gsap.to(elements, {
-        y: 0,
-        opacity: 1,
-        duration: 1.2,
-        stagger: 0.05,
-        ease: 'power3.out'
-      })
-    }
+      const elements = gsap.utils.toArray('.nav-animate')
 
-    // Escuchar el evento que dispara el Loader
-    window.addEventListener('introReady', playIntro)
-    return () => window.removeEventListener('introReady', playIntro)
-  }, { scope: headerRef, dependencies: [pathname] })
+      // Initially hide elements
+      gsap.set(elements, { y: -30, opacity: 0 })
+
+      const playIntro = () => {
+        gsap.to(elements, {
+          y: 0,
+          opacity: 1,
+          duration: 1.2,
+          stagger: 0.05,
+          ease: 'power3.out',
+        })
+      }
+
+      window.addEventListener('introReady', playIntro)
+      return () => window.removeEventListener('introReady', playIntro)
+    },
+    { scope: headerRef, dependencies: [pathname] }
+  )
 
   useEffect(() => {
     const onScroll = () => {
-      if (pathname === routes.home) {
-        // On home page, wait until reaching the next section (approx 100vh)
+      if (isHome) {
         setScrolled(window.scrollY > window.innerHeight - 50)
       } else {
-        // On other pages, change color almost immediately
         setScrolled(window.scrollY > 16)
       }
     }
-    
+
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-  }, [pathname])
+  }, [isHome])
 
   useEffect(() => {
     setOpen(false)
   }, [pathname])
 
   const links = [
-    { href: routes.about, label: t.about },
-    { href: routes.process, label: t.process },
-    { href: routes.craft, label: t.craft },
-    { href: routes.products, label: t.products },
-    { href: routes.blog, label: t.blog },
-    { href: routes.contact, label: t.contact },
+    { href: '/who-we-are', label: t('about') },
+    { href: '/process', label: t('process') },
+    { href: '/craftsmanship', label: t('craft') },
+    { href: '/collections', label: t('products') },
+    { href: '/journal', label: t('blog') },
+    { href: '/contact', label: t('contact') },
   ]
+
+  const handleLanguageChange = (targetLocale: Locale) => {
+    if (targetLocale === locale) return
+
+    // Detail page logic: pathname is /journal/[slug]
+    const isJournalDetail = pathname.startsWith('/journal/') && pathname !== '/journal'
+    if (isJournalDetail) {
+      const translation = translations?.find((tr) => tr.locale === targetLocale)
+      if (translation && translation.slug) {
+        window.location.href = `/${targetLocale}/journal/${translation.slug}`
+      } else {
+        // Fallback to journal listing if no translation exists
+        window.location.href = `/${targetLocale}/journal`
+      }
+      return
+    }
+
+    // Listing page logic: pathname is /journal (drop ?category= query)
+    if (pathname === '/journal') {
+      window.location.href = `/${targetLocale}/journal`
+      return
+    }
+
+    // Standard pages: switch locale on current pathname
+    router.replace(pathname as any, { locale: targetLocale })
+  }
 
   return (
     <header
@@ -95,11 +121,10 @@ export function SiteHeader() {
         'fixed inset-x-0 top-0 z-50 transition-colors duration-300',
         !isTransparent
           ? 'border-b border-border bg-background/90 backdrop-blur-md text-foreground'
-          : 'border-b border-transparent text-[#f3ede5]',
+          : 'border-b border-transparent text-[#f3ede5]'
       )}
     >
       <div className="w-full grid h-16 grid-cols-[1fr_auto_1fr] items-center px-4 md:h-20 md:px-8">
-        
         {/* Left - Navigation Links */}
         <div className="flex w-full justify-start items-center">
           {/* Desktop Nav */}
@@ -107,13 +132,14 @@ export function SiteHeader() {
             {links.slice(0, 4).map((link) => (
               <Link
                 key={link.href}
-                href={link.href}
+                href={link.href as any}
                 className={cn(
                   'nav-animate text-[11px] uppercase tracking-[0.15em] transition-colors',
                   !isTransparent
                     ? 'text-foreground/70 hover:text-foreground'
                     : 'text-[#f3ede5]/70 hover:text-[#f3ede5]',
-                  pathname === link.href && (!isTransparent ? 'text-foreground' : 'text-[#f3ede5]'),
+                  pathname === link.href &&
+                    (!isTransparent ? 'text-foreground' : 'text-[#f3ede5]')
                 )}
               >
                 {link.label}
@@ -125,8 +151,8 @@ export function SiteHeader() {
             type="button"
             onClick={() => setOpen((v) => !v)}
             className={cn(
-              "nav-animate inline-flex size-9 items-center justify-start md:hidden transition-colors",
-              !isTransparent ? "text-foreground" : "text-[#f3ede5]"
+              'nav-animate inline-flex size-9 items-center justify-start md:hidden transition-colors cursor-pointer',
+              !isTransparent ? 'text-foreground' : 'text-[#f3ede5]'
             )}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
@@ -138,12 +164,13 @@ export function SiteHeader() {
         {/* Center - Logo */}
         <div className="flex justify-center px-4">
           <Link
-            href={routes.home}
+            href="/"
             className="flex flex-col items-center justify-center leading-none nav-animate h-full"
             aria-label="Lyon's Artisans home"
           >
-            <img 
-              src={isTransparent ? "/logo-STONE.svg" : "/logo-noir-2.svg"}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={isTransparent ? '/logo-STONE.svg' : '/logo-noir-2.svg'}
               alt="Lyon's Artisans"
               className="h-16 md:h-20 w-auto max-w-[232px] object-contain transition-all duration-300"
             />
@@ -156,39 +183,48 @@ export function SiteHeader() {
             {links.slice(4, 6).map((link) => (
               <Link
                 key={link.href}
-                href={link.href}
+                href={link.href as any}
                 className={cn(
                   'nav-animate text-[11px] uppercase tracking-[0.15em] transition-colors',
                   !isTransparent
                     ? 'text-foreground/70 hover:text-foreground'
                     : 'text-[#f3ede5]/70 hover:text-[#f3ede5]',
-                  pathname === link.href && (!isTransparent ? 'text-foreground' : 'text-[#f3ede5]'),
+                  pathname === link.href &&
+                    (!isTransparent ? 'text-foreground' : 'text-[#f3ede5]')
                 )}
               >
                 {link.label}
               </Link>
             ))}
-            
+
             <div className="nav-animate flex items-center">
-              <LangToggle lang={lang} setLang={setLang} isDark={isTransparent} />
+              <LangToggle
+                currentLocale={locale}
+                onSelectLocale={handleLanguageChange}
+                isDark={isTransparent}
+              />
             </div>
-            
+
             <Link
-              href={routes.contact}
+              href="/contact"
               className={cn(
-                "nav-animate text-[11px] uppercase tracking-[0.15em] transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-current after:transition-transform hover:after:origin-bottom-left hover:after:scale-x-100",
+                'nav-animate text-[11px] uppercase tracking-[0.15em] transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-current after:transition-transform hover:after:origin-bottom-left hover:after:scale-x-100',
                 !isTransparent
-                  ? "text-foreground/70 hover:text-foreground"
-                  : "text-[#f3ede5]/70 hover:text-[#f3ede5]"
+                  ? 'text-foreground/70 hover:text-foreground'
+                  : 'text-[#f3ede5]/70 hover:text-[#f3ede5]'
               )}
             >
-              {t.enquire}
+              {t('enquire')}
             </Link>
           </nav>
-          
+
           {/* Mobile Lang Toggle */}
           <div className="nav-animate md:hidden ml-auto">
-            <LangToggle lang={lang} setLang={setLang} isDark={isTransparent} />
+            <LangToggle
+              currentLocale={locale}
+              onSelectLocale={handleLanguageChange}
+              isDark={isTransparent}
+            />
           </div>
         </div>
       </div>
@@ -199,7 +235,7 @@ export function SiteHeader() {
             {links.map((link) => (
               <li key={link.href}>
                 <Link
-                  href={link.href}
+                  href={link.href as any}
                   className="block border-b border-border/60 py-4 font-serif text-2xl"
                 >
                   {link.label}
@@ -214,43 +250,48 @@ export function SiteHeader() {
 }
 
 function LangToggle({
-  lang,
-  setLang,
-  isDark
+  currentLocale,
+  onSelectLocale,
+  isDark,
 }: {
-  lang: 'en' | 'es'
-  setLang: (l: 'en' | 'es') => void
+  currentLocale: Locale
+  onSelectLocale: (locale: Locale) => void
   isDark?: boolean
 }) {
   return (
-    <div className={cn(
-      "flex items-center text-xs tracking-widest transition-colors",
-      isDark ? "text-[#f3ede5]/60" : "text-muted-foreground"
-    )}>
+    <div
+      className={cn(
+        'flex items-center text-xs tracking-widest transition-colors',
+        isDark ? 'text-[#f3ede5]/60' : 'text-muted-foreground'
+      )}
+    >
       <button
         type="button"
-        onClick={() => setLang('en')}
+        onClick={() => onSelectLocale('en')}
         className={cn(
-          'px-1.5 transition-colors',
+          'px-1.5 transition-colors cursor-pointer',
           isDark ? 'hover:text-[#f3ede5]' : 'hover:text-foreground',
-          lang === 'en' && (isDark ? 'text-[#f3ede5]' : 'text-foreground'),
+          currentLocale === 'en' && (isDark ? 'text-[#f3ede5] font-semibold' : 'text-foreground font-semibold')
         )}
-        aria-pressed={lang === 'en'}
+        aria-pressed={currentLocale === 'en'}
       >
         EN
       </button>
-      <span className={cn("transition-colors", isDark ? "text-[#f3ede5]/30" : "text-border")} aria-hidden>
+      <span
+        className={cn('transition-colors', isDark ? 'text-[#f3ede5]/30' : 'text-border')}
+        aria-hidden
+      >
         /
       </span>
       <button
         type="button"
-        onClick={() => setLang('es')}
+        onClick={() => onSelectLocale('es')}
         className={cn(
-          'px-1.5 transition-colors',
+          'px-1.5 transition-colors cursor-pointer',
           isDark ? 'hover:text-[#f3ede5]' : 'hover:text-foreground',
-          lang === 'es' && (isDark ? 'text-[#f3ede5]' : 'text-foreground'),
+          currentLocale === 'es' && (isDark ? 'text-[#f3ede5] font-semibold' : 'text-foreground font-semibold')
         )}
-        aria-pressed={lang === 'es'}
+        aria-pressed={currentLocale === 'es'}
       >
         ES
       </button>

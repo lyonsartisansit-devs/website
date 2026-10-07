@@ -13,7 +13,7 @@ interface Step {
 }
 
 interface FloatingProcessNavProps {
-  steps: Step[];
+  steps: readonly Step[] | Step[] | readonly any[];
 }
 
 export function FloatingProcessNav({ steps }: FloatingProcessNavProps) {
