@@ -1,37 +1,31 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useLanguage } from '@/components/language-provider'
-import { footer, nav, routes } from '@/lib/i18n'
-
+import { useTranslations } from 'next-intl'
+import { Link, usePathname } from '@/i18n/routing'
 
 export function SiteFooter() {
-  const { lang } = useLanguage()
+  const tFooter = useTranslations('footer')
+  const tNav = useTranslations('nav')
   const pathname = usePathname()
 
   const isComingSoon =
     process.env.NEXT_PUBLIC_COMING_SOON === 'true' ||
     process.env.COMING_SOON === 'true' ||
-    pathname === '/coming-soon' ||
-    pathname === '/under-construction'
+    pathname.includes('/coming-soon') ||
+    pathname.includes('/under-construction')
 
   if (isComingSoon) {
     return null
   }
 
-
-
-  const f = footer[lang]
-  const n = nav[lang]
   const year = new Date().getFullYear()
 
   const links = [
-    { href: routes.about, label: n.about },
-    { href: routes.process, label: n.process },
-    { href: routes.craft, label: n.craft },
-    { href: routes.products, label: n.products },
-    { href: routes.contact, label: n.contact },
+    { href: '/who-we-are', label: tNav('about') },
+    { href: '/process', label: tNav('process') },
+    { href: '/craftsmanship', label: tNav('craft') },
+    { href: '/collections', label: tNav('products') },
+    { href: '/contact', label: tNav('contact') },
   ]
 
   return (
@@ -41,19 +35,19 @@ export function SiteFooter() {
           <div className="max-w-sm">
             <p className="font-serif text-3xl leading-tight">Lyon&apos;s Artisans</p>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              {f.tagline}
+              {tFooter('tagline')}
             </p>
           </div>
 
           <div className="flex flex-col gap-4">
             <p className="font-subheading text-xs uppercase tracking-[0.28em] text-muted-foreground">
-              {f.explore}
+              {tFooter('explore')}
             </p>
             <ul className="flex flex-col gap-3">
               {links.map((link) => (
                 <li key={link.href}>
                   <Link
-                    href={link.href}
+                    href={link.href as any}
                     className="text-sm text-foreground/75 transition-colors hover:text-foreground"
                   >
                     {link.label}
@@ -79,10 +73,10 @@ export function SiteFooter() {
 
         <div className="mt-16 flex flex-col gap-2 border-t border-border pt-6 text-xs tracking-wide text-muted-foreground md:flex-row md:items-center md:justify-between">
           <p>
-            © {year} Lyon&apos;s Artisans. {f.rights}
+            © {year} Lyon&apos;s Artisans. {tFooter('rights')}
           </p>
           <p className="font-subheading uppercase tracking-[0.28em]">
-            Human Hands · Refined Machinery · Premium Materials
+            {tFooter('atelierTagline')}
           </p>
         </div>
       </div>

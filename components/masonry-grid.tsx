@@ -10,20 +10,39 @@ interface MasonryGridProps {
 }
 
 function getApproximateHeight(child: React.ReactNode): number {
-  if (!React.isValidElement(child)) return 1;
-  // Deep dive to find BlogCard's aspectRatio if it exists
-  const blogCard = child.props.children; // Assuming child is the wrapper div
-  if (React.isValidElement(blogCard) && blogCard.props && 'aspectRatio' in blogCard.props) {
-    const ratio = blogCard.props.aspectRatio as string;
-    if (ratio === '1/1') return 1.2; // roughly height including text
-    if (ratio === '4/3') return 1.0; 
-    if (ratio === '3/4') return 1.6;
-    if (ratio === '16/9') return 0.8;
+  if (!React.isValidElement(child)) return 1
+
+  // If child itself or child's first child has aspectRatio prop
+  let ratioProp = (child.props as any)?.aspectRatio
+  if (!ratioProp && React.isValidElement((child.props as any)?.children)) {
+    ratioProp = ((child.props as any).children.props as any)?.aspectRatio
   }
-  return 1;
+
+  if (typeof ratioProp === 'number' && ratioProp > 0) {
+    return 1 / ratioProp + 0.3 // height relative to width + card text offset
+  }
+
+  if (typeof ratioProp === 'string') {
+    if (ratioProp === '16/9' || ratioProp === '16:9') return 0.86
+    if (ratioProp === '4/3' || ratioProp === '4:3') return 1.05
+    if (ratioProp === '1/1' || ratioProp === '1:1') return 1.3
+    if (ratioProp === '4/5' || ratioProp === '4:5') return 1.55
+    if (ratioProp === '3/4' || ratioProp === '3:4') return 1.63
+    if (ratioProp.includes('/')) {
+      const [w, h] = ratioProp.split('/').map(Number)
+      if (w && h) return h / w + 0.3
+    }
+  }
+
+  return 1.3
 }
 
-export function MasonryGrid({ children, columns, gap = 24, featuredFirstItem = false }: MasonryGridProps) {
+export function MasonryGrid({
+  children,
+  columns,
+  gap = 32,
+  featuredFirstItem = false,
+}: MasonryGridProps) {
   const [cols, setCols] = useState(columns.default)
 
   useEffect(() => {
@@ -41,127 +60,126 @@ export function MasonryGrid({ children, columns, gap = 24, featuredFirstItem = f
     return () => window.removeEventListener('resize', updateCols)
   }, [columns.default, columns.sm, columns.md, columns.lg, columns.xl])
 
-  const childrenArray = React.Children.toArray(children)
+  const childrenArray = React.Children.toArray(children).filter(Boolean)
+
+  if (childrenArray.length === 0) {
+    return null
+  }
 
   if (featuredFirstItem && cols >= 2 && childrenArray.length > 0) {
     const firstItem = childrenArray[0]
     const restItems = childrenArray.slice(1)
-    
-    // Approximate column heights to place items in the shortest column
-    const colHeights = new Array(cols).fill(0);
-    const colArrays: React.ReactNode[][] = Array.from({ length: cols }, () => []);
-    
-    // First item spans Col 0 and Col 1 (or just Col 0 if cols=2 and it spans both? Wait, if cols=2 it spans 0 & 1)
-    const featuredHeight = getApproximateHeight(firstItem) * 2; // Roughly double because it's 2 cols wide
-    colHeights[0] = featuredHeight;
-    colHeights[1] = featuredHeight;
-    // We don't push firstItem to colArrays because we render it separately spanning them
+
+    // Column distribution
+    const colHeights = new Array(cols).fill(0)
+    const colArrays: React.ReactNode[][] = Array.from({ length: cols }, () => [])
+
+    const featuredHeight = getApproximateHeight(firstItem) * 1.6
+    colHeights[0] = featuredHeight
+    colHeights[1] = featuredHeight
 
     restItems.forEach((child) => {
-      const height = getApproximateHeight(child);
-      
-      // Find the shortest column
-      let shortestCol = 0;
-      let minHeight = Infinity;
+      const height = getApproximateHeight(child)
+
+      let shortestCol = 0
+      let minHeight = Infinity
       for (let i = 0; i < cols; i++) {
         if (colHeights[i] < minHeight) {
-          minHeight = colHeights[i];
-          shortestCol = i;
+          minHeight = colHeights[i]
+          shortestCol = i
         }
       }
-      
-      colArrays[shortestCol].push(child);
-      colHeights[shortestCol] += height;
-    });
+
+      colArrays[shortestCol].push(child)
+      colHeights[shortestCol] += height
+    })
 
     if (cols === 2) {
-       return (
-         <div className="flex flex-col" style={{ gap: `${gap}px` }}>
-           <div className="w-full">{firstItem}</div>
-           <div className="flex" style={{ gap: `${gap}px` }}>
-             <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
-               {colArrays[0]}
-             </div>
-             <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
-               {colArrays[1]}
-             </div>
-           </div>
-         </div>
-       )
+      return (
+        <div className="flex flex-col" style={{ gap: `${gap}px` }}>
+          <div className="w-full">{firstItem}</div>
+          <div className="flex" style={{ gap: `${gap}px` }}>
+            <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
+              {colArrays[0]}
+            </div>
+            <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
+              {colArrays[1]}
+            </div>
+          </div>
+        </div>
+      )
     }
 
     if (cols === 4) {
       return (
-         <div className="flex" style={{ gap: `${gap}px` }}>
-           {/* Left 50% - Contains First Item, then Col 0 & Col 1 */}
-           <div className="flex-[2] flex flex-col" style={{ gap: `${gap}px` }}>
-             <div className="w-full">{firstItem}</div>
-             <div className="flex" style={{ gap: `${gap}px` }}>
-               <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
-                 {colArrays[0]}
-               </div>
-               <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
-                 {colArrays[1]}
-               </div>
-             </div>
-           </div>
-           
-           {/* Right 50% - Contains Col 2 & Col 3 starting from the top */}
-           <div className="flex-[2] flex" style={{ gap: `${gap}px` }}>
-             <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
-               {colArrays[2]}
-             </div>
-             <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
-               {colArrays[3]}
-             </div>
-           </div>
-         </div>
+        <div className="flex flex-col lg:flex-row" style={{ gap: `${gap}px` }}>
+          {/* Left 50% - Contains Featured First Item, then Col 0 & Col 1 */}
+          <div className="flex-[2] flex flex-col" style={{ gap: `${gap}px` }}>
+            <div className="w-full">{firstItem}</div>
+            <div className="flex" style={{ gap: `${gap}px` }}>
+              <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
+                {colArrays[0]}
+              </div>
+              <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
+                {colArrays[1]}
+              </div>
+            </div>
+          </div>
+
+          {/* Right 50% - Contains Col 2 & Col 3 */}
+          <div className="flex-[2] flex" style={{ gap: `${gap}px` }}>
+            <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
+              {colArrays[2]}
+            </div>
+            <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
+              {colArrays[3]}
+            </div>
+          </div>
+        </div>
       )
     }
-    
+
     if (cols === 3) {
       return (
-         <div className="flex" style={{ gap: `${gap}px` }}>
-           {/* Left 66% */}
-           <div className="flex-[2] flex flex-col" style={{ gap: `${gap}px` }}>
-             <div className="w-full">{firstItem}</div>
-             <div className="flex" style={{ gap: `${gap}px` }}>
-               <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
-                 {colArrays[0]}
-               </div>
-               <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
-                 {colArrays[1]}
-               </div>
-             </div>
-           </div>
-           
-           {/* Right 33% */}
-           <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
-             {colArrays[2]}
-           </div>
-         </div>
+        <div className="flex flex-col md:flex-row" style={{ gap: `${gap}px` }}>
+          {/* Left 66% */}
+          <div className="flex-[2] flex flex-col" style={{ gap: `${gap}px` }}>
+            <div className="w-full">{firstItem}</div>
+            <div className="flex" style={{ gap: `${gap}px` }}>
+              <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
+                {colArrays[0]}
+              </div>
+              <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
+                {colArrays[1]}
+              </div>
+            </div>
+          </div>
+
+          {/* Right 33% */}
+          <div className="flex-1 flex flex-col" style={{ gap: `${gap}px` }}>
+            {colArrays[2]}
+          </div>
+        </div>
       )
     }
   }
 
-  // Default behavior (no featured item)
-  const colHeights = new Array(cols).fill(0);
-  const colArrays: React.ReactNode[][] = Array.from({ length: cols }, () => []);
-  
-  React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child)) {
-      let shortestCol = 0;
-      let minHeight = Infinity;
-      for (let i = 0; i < cols; i++) {
-        if (colHeights[i] < minHeight) {
-          minHeight = colHeights[i];
-          shortestCol = i;
-        }
+  // Default behavior (no featured item or 1 column)
+  const colHeights = new Array(cols).fill(0)
+  const colArrays: React.ReactNode[][] = Array.from({ length: cols }, () => [])
+
+  childrenArray.forEach((child) => {
+    let shortestCol = 0
+    let minHeight = Infinity
+    for (let i = 0; i < cols; i++) {
+      if (colHeights[i] < minHeight) {
+        minHeight = colHeights[i]
+        shortestCol = i
       }
-      colArrays[shortestCol].push(child);
-      colHeights[shortestCol] += getApproximateHeight(child);
     }
-  });
+    colArrays[shortestCol].push(child)
+    colHeights[shortestCol] += getApproximateHeight(child)
+  })
 
   return (
     <div className="flex" style={{ gap: `${gap}px` }}>
