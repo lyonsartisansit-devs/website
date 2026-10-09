@@ -1,74 +1,95 @@
-'use client'
+import type { Metadata } from 'next'
+import { setRequestLocale } from 'next-intl/server'
+import { locales } from '@/i18n/routing'
+import { CraftsmanshipView } from '@/components/craftsmanship-view'
+import { JsonLd } from '@/components/json-ld'
 
-import Image from 'next/image'
-import { useTranslations } from 'next-intl'
-import { Link } from '@/i18n/routing'
-import { PageHeader } from '@/components/page-header'
+interface PageProps {
+  params: Promise<{ locale: string }>
+}
 
-export default function CraftsmanshipPage() {
-  const t = useTranslations('craft')
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }))
+}
 
-  const rawBody = t.raw('body') as string[]
-  const rawProcess = t.raw('process') as Array<{ no: string; title: string; body: string }>
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
+
+  const title = isSpanish
+    ? "Artesanía y Personas — El Oficio Zapatero | Lyon's Artisans"
+    : "Craftsmanship & People — Master Shoemaking | Lyon's Artisans"
+
+  const description = isSpanish
+    ? "Hecho por personas apasionadas por el oficio. Preservamos la zapatería tradicional creando oportunidades y desarrollo en León, Guanajuato."
+    : "Built by people who care deeply about the craft. Discover how skilled artisans and master technicians assemble premium footwear in León, México."
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${baseUrl}/${locale}/craftsmanship`,
+      languages: {
+        en: `${baseUrl}/en/craftsmanship`,
+        es: `${baseUrl}/es/craftsmanship`,
+        'x-default': `${baseUrl}/en/craftsmanship`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/${locale}/craftsmanship`,
+      siteName: "Lyon's Artisans",
+      locale: isSpanish ? 'es_MX' : 'en_US',
+      type: 'website',
+      images: [
+        {
+          url: '/images/craft-hero.png',
+          width: 1200,
+          height: 630,
+          alt: "Lyon's Artisans Master Craftsmanship",
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/images/craft-hero.png'],
+    },
+  }
+}
+
+export default async function CraftsmanshipPage({ params }: PageProps) {
+  const { locale } = await params
+  setRequestLocale(locale)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: isSpanish ? 'Inicio' : 'Home',
+        item: `${baseUrl}/${locale}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: isSpanish ? 'Artesanía' : 'Craftsmanship',
+        item: `${baseUrl}/${locale}/craftsmanship`,
+      },
+    ],
+  }
 
   return (
-    <article>
-      <PageHeader eyebrow={t('eyebrow')} title={t('title')} lead={t('lead')} />
-
-      <section className="mx-auto max-w-7xl px-5 pb-24 md:px-8 md:pb-32">
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-sm">
-            <Image
-              src="/images/craft-hero.png"
-              alt="Craftsmanship"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
-          <div className="flex flex-col justify-center gap-6 text-lg leading-relaxed text-foreground/80 md:pl-8">
-            {rawBody.map((p) => (
-              <p key={p.slice(0, 24)} className="text-pretty">
-                {p}
-              </p>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-y border-border bg-card">
-        <div className="mx-auto max-w-7xl px-5 py-24 md:px-8 md:py-32">
-          <p className="font-subheading text-xs uppercase tracking-[0.3em] text-primary">
-            {t('processLabel')}
-          </p>
-          <div className="mt-14 grid gap-12 md:grid-cols-3 md:gap-10">
-            {rawProcess.map((step) => (
-              <div key={step.no} className="flex flex-col gap-4">
-                <span className="font-serif text-5xl font-light text-primary/40">
-                  {step.no}
-                </span>
-                <h2 className="font-serif text-2xl">{step.title}</h2>
-                <p className="leading-relaxed text-muted-foreground">
-                  {step.body}
-                </p>
-              </div>
-            ))}
-          </div>
-          <Link
-            href="/process"
-            className="mt-14 inline-flex items-center gap-2 border-b border-foreground/30 pb-1 text-sm tracking-wide transition-colors hover:border-foreground"
-          >
-            {t('exploreProcess')}
-            <span aria-hidden>→</span>
-          </Link>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-5xl px-5 py-24 text-center md:px-8 md:py-32">
-        <p className="text-balance font-serif text-2xl font-light italic leading-snug md:text-4xl">
-          {t('peopleQuote')}
-        </p>
-      </section>
-    </article>
+    <>
+      <JsonLd data={breadcrumbSchema} />
+      <CraftsmanshipView />
+    </>
   )
 }

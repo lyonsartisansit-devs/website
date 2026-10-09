@@ -105,9 +105,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+import { JsonLd } from '@/components/json-ld'
+
 export default async function JournalDetailPage({ params }: PageProps) {
   const { locale, slug } = await params
   setRequestLocale(locale)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
 
   const post = await sanityFetch<typeof POST_BY_SLUG_QUERY>({
     query: POST_BY_SLUG_QUERY,
@@ -126,8 +129,67 @@ export default async function JournalDetailPage({ params }: PageProps) {
     .filter((tr) => Boolean(tr.locale && tr.slug))
     .map((tr) => ({ locale: tr.locale!, slug: tr.slug! }))
 
+  const ogImageSource = post.seo?.ogImage || post.coverImage
+  const ogImageUrl = ogImageSource
+    ? urlForImage(ogImageSource as any).width(1200).height(630).url()
+    : undefined
+
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt || post.seo?.description,
+    image: ogImageUrl ? [ogImageUrl] : undefined,
+    datePublished: post.publishedAt,
+    dateModified: (post as any)._updatedAt || post.publishedAt,
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${baseUrl}/${locale}/journal/${slug}`,
+    },
+    author: {
+      '@type': 'Organization',
+      name: "Lyon's Artisans",
+      url: baseUrl,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: "Lyon's Artisans",
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/logo-STONE.svg`,
+      },
+    },
+  }
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: locale === 'es' ? 'Inicio' : 'Home',
+        item: `${baseUrl}/${locale}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: locale === 'es' ? 'Diario' : 'Journal',
+        item: `${baseUrl}/${locale}/journal`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: post.title,
+        item: `${baseUrl}/${locale}/journal/${slug}`,
+      },
+    ],
+  }
+
   return (
     <article className="min-h-screen pt-24 md:pt-32 pb-16">
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={articleSchema} />
       {/* Set translations in context for header language switcher */}
       <SetPostTranslations translations={translations} />
 

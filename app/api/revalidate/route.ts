@@ -10,11 +10,19 @@ type WebhookPayload = {
   }
 }
 
+const VALID_IDENTIFIER = /^[a-zA-Z0-9_-]+$/
+
 export async function POST(req: NextRequest) {
   try {
+    const secret = process.env.SANITY_WEBHOOK_SECRET
+    if (!secret) {
+      console.error('SANITY_WEBHOOK_SECRET is not configured')
+      return new NextResponse('Webhook secret not configured', { status: 500 })
+    }
+
     const { isValidSignature, body } = await parseBody<WebhookPayload>(
       req,
-      process.env.SANITY_WEBHOOK_SECRET,
+      secret,
       true // small delay to allow CDN to synchronize
     )
 
@@ -22,8 +30,8 @@ export async function POST(req: NextRequest) {
       return new NextResponse('Invalid signature', { status: 401 })
     }
 
-    if (!body?._type) {
-      return new NextResponse('Bad request: Missing _type in payload', { status: 400 })
+    if (!body?._type || !VALID_IDENTIFIER.test(body._type)) {
+      return new NextResponse('Bad request: Invalid _type in payload', { status: 400 })
     }
 
     // Revalidate primary tag for document type
@@ -31,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     // If a post was modified, also revalidate its specific slug tag and journalPage
     if (body._type === 'post') {
-      if (body.slug?.current) {
+      if (body.slug?.current && VALID_IDENTIFIER.test(body.slug.current)) {
         revalidateTag(`post:${body.slug.current}`, 'max')
       }
       revalidateTag('journalPage', 'max')
@@ -46,6 +54,6 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: any) {
     console.error('Revalidation webhook error:', err)
-    return new NextResponse(err.message || 'Internal Server Error', { status: 500 })
+    return new NextResponse('Internal Server Error', { status: 500 })
   }
 }

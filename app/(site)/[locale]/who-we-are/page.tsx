@@ -1,186 +1,116 @@
-'use client'
+import type { Metadata } from 'next'
+import { setRequestLocale } from 'next-intl/server'
+import { locales } from '@/i18n/routing'
+import { WhoWeAreView } from '@/components/who-we-are-view'
+import { JsonLd } from '@/components/json-ld'
 
-import { useRef } from 'react'
-import Image from 'next/image'
-import gsap from 'gsap'
-import { useGSAP } from '@gsap/react'
-import { useTranslations, useLocale } from 'next-intl'
-import { PageHeader } from '@/components/page-header'
+interface PageProps {
+  params: Promise<{ locale: string }>
+}
 
-export default function WhoWeArePage() {
-  const t = useTranslations('about')
-  const locale = useLocale()
-  const containerRef = useRef<HTMLElement>(null)
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }))
+}
 
-  const rawBody = t.raw('body') as string[]
-  const rawValues = t.raw('values') as Array<{ title: string; body: string }>
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
 
-  useGSAP(
-    () => {
-      gsap.to('.about-hero-image', {
-        scale: 1.15,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '.about-hero-section',
-          start: 'top bottom',
-          end: 'bottom top',
-          scrub: 1.5,
-        },
-      })
+  const title = isSpanish
+    ? "Quiénes Somos — Herencia Artesanal en León, México | Lyon's Artisans"
+    : "Who We Are — Heritage, Craftsmanship & Global Standards | Lyon's Artisans"
 
-      const tlValues = gsap.timeline({
-        scrollTrigger: {
-          trigger: '.values-wrapper',
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 1,
-        },
-      })
+  const description = isSpanish
+    ? "Fundada en León, México, Lyon's Artisans une la tradición zapatera artesanal con tecnología moderna y estándares internacionales de calidad y responsabilidad social."
+    : "Founded in León, México, Lyon's Artisans unites traditional shoemaking heritage with modern engineering, high craftsmanship, and global production standards."
 
-      const valueCards = gsap.utils.toArray<HTMLElement>('.value-card')
-
-      // Initial state: cards are outside their grid cells
-      if (valueCards.length >= 4) {
-        gsap.set(valueCards[0], { xPercent: -120 })
-        gsap.set(valueCards[1], { yPercent: 120 })
-        gsap.set(valueCards[2], { yPercent: -120 })
-        gsap.set(valueCards[3], { xPercent: 120 })
-
-        // Phase 1: Slide in sequentially
-        tlValues.to(valueCards[0], { xPercent: 0, duration: 1, ease: 'power2.out' })
-        tlValues.to(valueCards[1], { yPercent: 0, duration: 1, ease: 'power2.out' })
-        tlValues.to(valueCards[2], { yPercent: 0, duration: 1, ease: 'power2.out' })
-        tlValues.to(valueCards[3], { xPercent: 0, duration: 1, ease: 'power2.out' })
-
-        tlValues.to({}, { duration: 0.5 }) // small pause
-
-        // Phase 2: Colors and textures
-        const colors = ['#3B281C', '#6D4835', '#B5936F', '#E5D9CA']
-
-        tlValues.to(
-          '.value-bg',
-          {
-            backgroundColor: (i) => colors[i],
-            duration: 1,
-            ease: 'none',
-            stagger: 0.2,
-          },
-          'colorChange'
-        )
-
-        tlValues.to(
-          '.value-leather',
-          {
-            opacity: 0.85,
-            duration: 1,
-            ease: 'none',
-            stagger: 0.2,
-          },
-          'colorChange'
-        )
-
-        tlValues.to(
-          '.value-gradient',
-          {
-            opacity: (index) => (index === 2 ? 1 : 0),
-            duration: 1,
-            ease: 'none',
-            stagger: 0.2,
-          },
-          'colorChange'
-        )
-
-        tlValues.to(
-          '.value-number, .value-body, .value-title',
-          {
-            color: (index) => {
-              const cardIndex = Math.floor(index / 3)
-              return cardIndex === 3 ? '#3B281C' : 'rgba(229, 217, 202, 0.9)'
-            },
-            duration: 1,
-            ease: 'none',
-            stagger: 0.2,
-          },
-          'colorChange'
-        )
-      }
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${baseUrl}/${locale}/who-we-are`,
+      languages: {
+        en: `${baseUrl}/en/who-we-are`,
+        es: `${baseUrl}/es/who-we-are`,
+        'x-default': `${baseUrl}/en/who-we-are`,
+      },
     },
-    { scope: containerRef, dependencies: [locale] }
-  )
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/${locale}/who-we-are`,
+      siteName: "Lyon's Artisans",
+      locale: isSpanish ? 'es_MX' : 'en_US',
+      type: 'website',
+      images: [
+        {
+          url: '/images/about-hero.png',
+          width: 1200,
+          height: 630,
+          alt: "Lyon's Artisans Atelier in León México",
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/images/about-hero.png'],
+    },
+  }
+}
+
+export default async function WhoWeArePage({ params }: PageProps) {
+  const { locale } = await params
+  setRequestLocale(locale)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: isSpanish ? 'Inicio' : 'Home',
+        item: `${baseUrl}/${locale}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: isSpanish ? 'Quiénes Somos' : 'Who We Are',
+        item: `${baseUrl}/${locale}/who-we-are`,
+      },
+    ],
+  }
+
+  const aboutSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: isSpanish ? 'Quiénes Somos — Lyon\'s Artisans' : 'Who We Are — Lyon\'s Artisans',
+    description: isSpanish
+      ? 'Herencia, artesanía y experiencia global en manufactura de calzado en León, Guanajuato, México.'
+      : 'Heritage, craftsmanship, and global experience in footwear manufacture in León, Guanajuato, Mexico.',
+    mainEntity: {
+      '@type': 'Organization',
+      name: "Lyon's Artisans",
+      url: baseUrl,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'León',
+        addressRegion: 'Guanajuato',
+        addressCountry: 'MX',
+      },
+    },
+  }
 
   return (
-    <article ref={containerRef}>
-      <PageHeader eyebrow={t('eyebrow')} title={t('title')} lead={t('lead')} />
-
-      <section className="about-hero-section relative mx-auto mb-24 max-w-7xl px-5 md:mb-32 md:px-8">
-        <div className="relative aspect-[16/9] overflow-hidden rounded-sm bg-muted">
-          <Image
-            src="/images/about-hero.png"
-            alt="Lyon's Artisans Atelier in León, México"
-            fill
-            sizes="(max-width: 768px) 100vw, 80vw"
-            className="about-hero-image object-cover"
-          />
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 pb-24 md:px-8 md:pb-32">
-        <div className="grid gap-10 md:grid-cols-12 md:gap-16">
-          <div className="md:col-span-4">
-            <p className="font-serif text-2xl font-light italic leading-snug text-primary md:text-3xl">
-              León, México
-            </p>
-          </div>
-          <div className="md:col-span-8">
-            <div className="flex flex-col gap-6 text-lg leading-relaxed text-foreground/80">
-              {rawBody.map((p) => (
-                <p key={p.slice(0, 24)} className="text-pretty">
-                  {p}
-                </p>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="values-wrapper w-full h-[400vh] relative">
-        <section className="values-section sticky top-0 flex h-screen w-full flex-col justify-center border-t border-border bg-card overflow-hidden">
-          <div className="mx-auto w-full max-w-7xl px-5 md:px-8">
-            <p className="font-subheading text-xs uppercase tracking-[0.3em] text-primary mb-12">
-              {t('valuesLabel')}
-            </p>
-            <div className="grid gap-px overflow-hidden rounded-sm border border-border bg-border sm:grid-cols-2">
-              {rawValues.map((v, i) => {
-                const textures = [
-                  '/images/leather-texture-croc.png',
-                  '/images/leather-texture.png',
-                  '/images/leather-texture-rough.png',
-                  '/images/leather-texture-snake.png',
-                ]
-                return (
-                  <div key={v.title} className="relative overflow-hidden bg-card h-full">
-                    <div className="value-card relative flex h-full flex-col gap-3 p-8 md:p-10 border border-transparent overflow-hidden">
-                      <div className="value-bg absolute inset-0 z-0 bg-card" />
-                      <div className="value-leather absolute inset-0 z-10 opacity-0 pointer-events-none mix-blend-overlay">
-                        <Image src={textures[i] || textures[0]} alt="" fill className="object-cover" />
-                      </div>
-                      <div className="value-gradient absolute inset-0 z-[15] opacity-0 pointer-events-none bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-
-                      <span className="value-number font-mono text-xs tracking-widest text-muted-foreground relative z-20">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <h2 className="value-title font-serif text-2xl text-foreground relative z-20">{v.title}</h2>
-                      <p className="value-body text-sm leading-relaxed text-muted-foreground relative z-20">
-                        {v.body}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </section>
-      </div>
-    </article>
+    <>
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={aboutSchema} />
+      <WhoWeAreView />
+    </>
   )
 }

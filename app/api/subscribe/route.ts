@@ -1,22 +1,31 @@
-import { NextResponse } from 'next/server';
-import { resend } from '@/lib/resend';
+import { NextResponse } from 'next/server'
+import { resend } from '@/lib/resend'
+
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
 
 function getSubscriberEmailHtml(lang: 'en' | 'es') {
-  const isEs = lang === 'es';
+  const isEs = lang === 'es'
 
-  const title = isEs ? 'Estás en la lista.' : 'You are on the list.';
+  const title = isEs ? 'Estás en la lista.' : 'You are on the list.'
   const subtitle = isEs
     ? 'LEÓN, GUANAJUATO · MANUFACTURA EST.'
-    : 'LEÓN, GUANAJUATO · EST. MANUFACTURE';
+    : 'LEÓN, GUANAJUATO · EST. MANUFACTURE'
   const body1 = isEs
     ? 'Gracias por tu interés en Lyon’s Artisans. Hemos registrado tu correo para compartir contigo la revelación de la primera colección, notas privadas de estudio y novedades antes del lanzamiento oficial.'
-    : 'Thank you for your interest in Lyon’s Artisans. Your email has been reserved to receive the first collection reveal, private studio notes, and official launch updates.';
+    : 'Thank you for your interest in Lyon’s Artisans. Your email has been reserved to receive the first collection reveal, private studio notes, and official launch updates.'
   const body2 = isEs
     ? 'Nuestra casa en León, México une siglos de tradición zapatera artesanal con una visión contemporánea y rigurosa.'
-    : 'Our house in León, Mexico bridges centuries of bespoke shoemaking heritage with an uncompromising contemporary vision.';
+    : 'Our house in León, Mexico bridges centuries of bespoke shoemaking heritage with an uncompromising contemporary vision.'
   const footerContact = isEs
     ? 'Si deseas iniciar una conversación directa o conocer más sobre nuestra manufactura, escríbenos a'
-    : 'For bespoke inquiries or private appointments, reach us directly at';
+    : 'For bespoke inquiries or private appointments, reach us directly at'
 
   return `
     <!DOCTYPE html>
@@ -72,76 +81,88 @@ function getSubscriberEmailHtml(lang: 'en' | 'es') {
         </table>
       </body>
     </html>
-  `;
+  `
 }
 
 function getAdminAlertHtml(email: string, lang: string, dateStr: string) {
+  const safeEmail = escapeHtml(email)
+  const safeLang = escapeHtml(lang.toUpperCase())
+  const safeDate = escapeHtml(dateStr)
+
   return `
     <div style="font-family: sans-serif; color: #191512; padding: 20px;">
       <h2 style="color: #191512; margin-top: 0;">Nuevo registro en Coming Soon</h2>
       <p>Un usuario ha solicitado el primer vistazo en la lista de espera:</p>
       <ul>
-        <li><strong>Email:</strong> ${email}</li>
-        <li><strong>Idioma:</strong> ${lang.toUpperCase()}</li>
-        <li><strong>Fecha:</strong> ${dateStr}</li>
+        <li><strong>Email:</strong> ${safeEmail}</li>
+        <li><strong>Idioma:</strong> ${safeLang}</li>
+        <li><strong>Fecha:</strong> ${safeDate}</li>
       </ul>
       <p style="font-size: 12px; color: #777;">Lyon's Artisans Notification System</p>
     </div>
-  `;
+  `
 }
+
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/
 
 export async function POST(req: Request) {
   try {
-    const { email, lang = 'en' } = await req.json();
+    const body = await req.json()
+    const { email, lang = 'en' } = body || {}
 
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
+    if (
+      !email ||
+      typeof email !== 'string' ||
+      email.length > 254 ||
+      !EMAIL_REGEX.test(email.trim())
+    ) {
       return NextResponse.json(
         { error: 'Invalid email address' },
         { status: 400 }
-      );
+      )
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
+    const cleanEmail = email.trim().toLowerCase()
+    const selectedLang = lang === 'es' ? 'es' : 'en'
+
+    const apiKey = process.env.RESEND_API_KEY
     if (!apiKey || !resend) {
       console.warn(
         'RESEND_API_KEY is not configured. Email submission received for:',
-        email
-      );
-      // In development or if key is not yet set, we return success with a warning flag
+        cleanEmail
+      )
       return NextResponse.json({
         success: true,
         message: 'Subscription saved (Resend API key not configured yet)',
         devNotice: 'Set RESEND_API_KEY in your local.env / .env.local file to enable live delivery.',
-      });
+      })
     }
 
     const fromEmail =
       process.env.RESEND_FROM_EMAIL ||
-      "Lyon's Artisans <onboarding@resend.dev>";
-    const notificationEmail = process.env.NOTIFICATION_EMAIL;
-
-    const selectedLang = lang === 'es' ? 'es' : 'en';
+      "Lyon's Artisans <onboarding@resend.dev>"
+    const notificationEmail = process.env.NOTIFICATION_EMAIL
 
     // 1. Send confirmation email to subscriber
     const subject =
       selectedLang === 'es'
         ? "Lyon's Artisans — Primer Vistazo Confirmado"
-        : "Lyon's Artisans — The First Look";
+        : "Lyon's Artisans — The First Look"
 
     const { data: subscriberData, error: subscriberError } =
       await resend.emails.send({
         from: fromEmail,
-        to: email,
+        to: cleanEmail,
         subject,
         html: getSubscriberEmailHtml(selectedLang),
-      });
+      })
 
     if (subscriberError) {
-      console.error('Error sending confirmation email via Resend:', subscriberError);
+      console.error('Error sending confirmation email via Resend:', subscriberError)
       return NextResponse.json(
-        { error: subscriberError.message || 'Failed to send confirmation email' },
+        { error: 'Unable to process subscription at this time' },
         { status: 500 }
-      );
+      )
     }
 
     // 2. Optionally notify admin/brand team if NOTIFICATION_EMAIL is configured
@@ -150,27 +171,27 @@ export async function POST(req: Request) {
         await resend.emails.send({
           from: fromEmail,
           to: notificationEmail,
-          subject: `[Nuevo Lead Coming Soon] ${email}`,
+          subject: `[Nuevo Lead Coming Soon] ${cleanEmail}`,
           html: getAdminAlertHtml(
-            email,
+            cleanEmail,
             selectedLang,
             new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })
           ),
-        });
+        })
       } catch (adminErr) {
-        console.warn('Failed to send admin notification email:', adminErr);
+        console.warn('Failed to send admin notification email:', adminErr)
       }
     }
 
     return NextResponse.json({
       success: true,
       id: subscriberData?.id,
-    });
+    })
   } catch (err: any) {
-    console.error('Unexpected error handling subscribe request:', err);
+    console.error('Unexpected error handling subscribe request:', err)
     return NextResponse.json(
-      { error: err?.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }

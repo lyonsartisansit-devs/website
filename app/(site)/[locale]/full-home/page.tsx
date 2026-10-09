@@ -19,7 +19,7 @@ export default function FullHomePage() {
   const t = useTranslations('home')
   const locale = useLocale()
   const heroRef = useRef<HTMLElement>(null)
-  const mainRef = useRef<HTMLElement>(null)
+  const mainRef = useRef<HTMLDivElement>(null)
 
   const rawPillars = t.raw('pillars') as Array<{ no: string; title: string; body: string }>
   const rawStats = t.raw('stats') as Array<{ value: string; label: string }>
@@ -296,7 +296,7 @@ export default function FullHomePage() {
   )
 
   return (
-    <main ref={mainRef}>
+    <div ref={mainRef}>
       {/* Hero */}
       <section
         ref={heroRef}
@@ -406,6 +406,7 @@ export default function FullHomePage() {
                         src={textures[index]}
                         alt=""
                         fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
                         className="object-cover"
                       />
                     </div>
@@ -553,6 +554,6 @@ export default function FullHomePage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }

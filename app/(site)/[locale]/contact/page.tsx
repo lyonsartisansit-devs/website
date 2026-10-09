@@ -1,134 +1,117 @@
-'use client'
+import type { Metadata } from 'next'
+import { setRequestLocale } from 'next-intl/server'
+import { locales } from '@/i18n/routing'
+import { ContactView } from '@/components/contact-view'
+import { JsonLd } from '@/components/json-ld'
 
-import { useState } from 'react'
-import { Check } from 'lucide-react'
-import { useTranslations } from 'next-intl'
-import { PageHeader } from '@/components/page-header'
-import { BrandPattern } from '@/components/brand-pattern'
+interface PageProps {
+  params: Promise<{ locale: string }>
+}
 
-export default function ContactPage() {
-  const t = useTranslations('contact')
-  const [submitted, setSubmitted] = useState(false)
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }))
+}
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setSubmitted(true)
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
+
+  const title = isSpanish
+    ? "Contacto — Inicia una Conversación de Manufactura | Lyon's Artisans"
+    : "Contact — Start a Conversation with the House | Lyon's Artisans"
+
+  const description = isSpanish
+    ? "Colaboramos con marcas que buscan manufactura de calzado y artículos de piel premium con un toque humano. Contáctanos desde nuestro atelier en León, México."
+    : "We partner with global brands seeking premium footwear and leather goods manufacturing with a human touch. Reach our team in León, México directly."
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${baseUrl}/${locale}/contact`,
+      languages: {
+        en: `${baseUrl}/en/contact`,
+        es: `${baseUrl}/es/contact`,
+        'x-default': `${baseUrl}/en/contact`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/${locale}/contact`,
+      siteName: "Lyon's Artisans",
+      locale: isSpanish ? 'es_MX' : 'en_US',
+      type: 'website',
+      images: [
+        {
+          url: '/images/hero.png',
+          width: 1200,
+          height: 630,
+          alt: "Contact Lyon's Artisans León México",
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/images/hero.png'],
+    },
+  }
+}
+
+export default async function ContactPage({ params }: PageProps) {
+  const { locale } = await params
+  setRequestLocale(locale)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: isSpanish ? 'Inicio' : 'Home',
+        item: `${baseUrl}/${locale}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: isSpanish ? 'Contacto' : 'Contact',
+        item: `${baseUrl}/${locale}/contact`,
+      },
+    ],
+  }
+
+  const contactSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    name: isSpanish ? 'Contacto — Lyon\'s Artisans' : 'Contact — Lyon\'s Artisans',
+    description: isSpanish
+      ? 'Contacto directo con la casa de manufactura de Lyon\'s Artisans en León, Guanajuato, México.'
+      : 'Direct contact with Lyon\'s Artisans manufacture house in León, Guanajuato, Mexico.',
+    mainEntity: {
+      '@type': 'Organization',
+      name: "Lyon's Artisans",
+      email: 'hello@lyonsartisans.mx',
+      url: baseUrl,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'León',
+        addressRegion: 'Guanajuato',
+        addressCountry: 'MX',
+      },
+    },
   }
 
   return (
-    <article className="relative overflow-hidden">
-      <BrandPattern className="absolute -right-1/4 top-0 h-full w-[120%] pointer-events-none md:-right-1/3 " />
-
-      <div className="relative z-10">
-        <PageHeader eyebrow={t('eyebrow')} title={t('title')} lead={t('lead')} />
-
-        <section className="mx-auto max-w-7xl px-5 pb-24 md:px-8 md:pb-32">
-          <div className="grid gap-12 md:grid-cols-12 md:gap-16">
-            {/* Details */}
-            <aside className="flex flex-col gap-10 md:col-span-4">
-              <div className="flex flex-col gap-2">
-                <p className="font-subheading text-xs uppercase tracking-[0.28em] text-muted-foreground">
-                  {t('locationLabel')}
-                </p>
-                <p className="font-serif text-xl">{t('location')}</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="font-subheading text-xs uppercase tracking-[0.28em] text-muted-foreground">
-                  {t('emailLabel')}
-                </p>
-                <a
-                  href={`mailto:${t('email')}`}
-                  className="font-serif text-xl transition-colors hover:text-primary"
-                >
-                  {t('email')}
-                </a>
-              </div>
-              <p className="font-subheading border-t border-border pt-6 text-xs uppercase tracking-[0.28em] text-muted-foreground">
-                {t('tagline')}
-              </p>
-            </aside>
-
-            {/* Form */}
-            <div className="md:col-span-8">
-              {submitted ? (
-                <div className="flex flex-col items-start gap-4 rounded-sm border border-border bg-card p-10">
-                  <span className="inline-flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Check className="size-5" />
-                  </span>
-                  <p className="text-pretty font-serif text-2xl font-light leading-snug">
-                    {t('form.success')}
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                  <div className="grid gap-6 sm:grid-cols-2">
-                    <Field label={t('form.name')} name="name" required />
-                    <Field label={t('form.company')} name="company" required />
-                    <Field
-                      label={t('form.email')}
-                      name="email"
-                      type="email"
-                      required
-                    />
-                    <Field label={t('form.phone')} name="phone" type="tel" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor="message"
-                      className="font-subheading text-xs uppercase tracking-[0.2em] text-muted-foreground"
-                    >
-                      {t('form.message')}
-                    </label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      rows={5}
-                      required
-                      className="resize-none rounded-sm border border-input bg-card px-4 py-3 text-foreground outline-none transition-colors focus:border-primary"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="inline-flex w-fit items-center gap-2 rounded-sm bg-foreground px-8 py-3.5 text-sm tracking-wide text-background transition-colors hover:bg-primary cursor-pointer"
-                  >
-                    {t('form.submit')}
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
-        </section>
-      </div>
-    </article>
-  )
-}
-
-function Field({
-  label,
-  name,
-  type = 'text',
-  required,
-}: {
-  label: string
-  name: string
-  type?: string
-  required?: boolean
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label
-        htmlFor={name}
-        className="font-subheading text-xs uppercase tracking-[0.2em] text-muted-foreground"
-      >
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        required={required}
-        className="rounded-sm border border-input bg-card px-4 py-3 text-foreground outline-none transition-colors focus:border-primary"
-      />
-    </div>
+    <>
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={contactSchema} />
+      <ContactView />
+    </>
   )
 }

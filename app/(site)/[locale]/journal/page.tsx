@@ -83,9 +83,32 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+import { JsonLd } from '@/components/json-ld'
+
 export default async function JournalPage({ params }: PageProps) {
   const { locale } = await params
   setRequestLocale(locale)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: isSpanish ? 'Inicio' : 'Home',
+        item: `${baseUrl}/${locale}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: isSpanish ? 'Diario' : 'Journal',
+        item: `${baseUrl}/${locale}/journal`,
+      },
+    ],
+  }
 
   const [journalPage, categories, posts] = await Promise.all([
     sanityFetch<typeof JOURNAL_PAGE_QUERY>({
@@ -106,13 +129,14 @@ export default async function JournalPage({ params }: PageProps) {
   ])
 
   return (
-    <main>
+    <>
+      <JsonLd data={breadcrumbSchema} />
       <JournalListView
         eyebrow={journalPage?.eyebrow}
         heading={journalPage?.heading}
         categories={categories || []}
         posts={posts || []}
       />
-    </main>
+    </>
   )
 }

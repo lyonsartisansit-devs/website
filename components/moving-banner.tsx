@@ -11,7 +11,11 @@ export function MovingBanner({ text, className }: MovingBannerProps) {
   const repeatedText = Array(10).fill(text)
 
   return (
-    <div className={cn("relative flex w-full overflow-hidden bg-primary text-primary-foreground py-4 sm:py-6 md:py-8", className)}>
+    <div
+      role="region"
+      aria-label="Brand banner"
+      className={cn("relative flex w-full overflow-hidden bg-primary text-primary-foreground py-4 sm:py-6 md:py-8", className)}
+    >
       <div className="flex animate-marquee whitespace-nowrap">
         {repeatedText.map((t, i) => (
           <span key={i} className="mx-4 font-serif text-3xl md:text-5xl lg:text-7xl">
@@ -19,7 +23,7 @@ export function MovingBanner({ text, className }: MovingBannerProps) {
           </span>
         ))}
       </div>
-      <div className="flex absolute top-0 animate-marquee2 whitespace-nowrap py-4 sm:py-6 md:py-8">
+      <div className="flex absolute top-0 animate-marquee2 whitespace-nowrap py-4 sm:py-6 md:py-8" aria-hidden="true">
         {repeatedText.map((t, i) => (
           <span key={i} className="mx-4 font-serif text-3xl md:text-5xl lg:text-7xl">
             {t}

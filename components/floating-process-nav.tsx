@@ -93,6 +93,7 @@ export function FloatingProcessNav({ steps }: FloatingProcessNavProps) {
     >
       {/* Floating Menu List with invisible bridge to prevent hover loss */}
       <div 
+        aria-hidden={!isOpen}
         className={cn(
           "absolute bottom-full right-0 pb-4 transition-all duration-300 origin-bottom-right",
           isOpen ? "scale-100 opacity-100 pointer-events-auto" : "scale-95 opacity-0 pointer-events-none"
@@ -101,8 +102,9 @@ export function FloatingProcessNav({ steps }: FloatingProcessNavProps) {
         <div className="overflow-hidden rounded-md border border-border bg-card/95 backdrop-blur-md shadow-2xl">
           <div className="flex flex-col py-2 min-w-[260px] max-h-[60vh] overflow-y-auto custom-scrollbar">
             <button
+              type="button"
               onClick={scrollToTop}
-              className="flex items-center gap-3 px-6 py-3 text-sm text-foreground/60 transition-colors hover:text-foreground hover:bg-muted/50"
+              className="flex items-center gap-3 px-6 py-3 text-sm text-foreground/60 transition-colors hover:text-foreground hover:bg-muted/50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <ArrowUp className="w-4 h-4" />
               <span>Back to top</span>
@@ -115,9 +117,10 @@ export function FloatingProcessNav({ steps }: FloatingProcessNavProps) {
               return (
                 <button
                   key={step.no}
+                  type="button"
                   onClick={() => scrollToStep(`step-${step.no}`)}
                   className={cn(
-                    "group flex items-baseline gap-3 px-6 py-2.5 text-left transition-all hover:bg-muted/50",
+                    "group flex items-baseline gap-3 px-6 py-2.5 text-left transition-all hover:bg-muted/50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                     isActive ? "bg-muted/30" : "",
                     isOpen ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
                   )}
@@ -147,14 +150,17 @@ export function FloatingProcessNav({ steps }: FloatingProcessNavProps) {
 
       {/* FAB Button */}
       <button
+        type="button"
         onPointerEnter={(e) => {
           if (e.pointerType === 'mouse') {
             setIsOpen(true);
           }
         }}
         onClick={() => setIsOpen(prev => !prev)}
-        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 pointer-events-auto"
+        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 pointer-events-auto cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         aria-label="Process Navigation Menu"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
         <div className="relative w-6 h-6">
           <Menu 

@@ -137,6 +137,7 @@ export function UnderConstruction() {
               : 'text-[#EBE4D8]/60'
           }`}
           aria-label="Switch to English"
+          aria-pressed={locale === 'en'}
         >
           EN
         </button>
@@ -150,6 +151,7 @@ export function UnderConstruction() {
               : 'text-[#EBE4D8]/60'
           }`}
           aria-label="Cambiar a Español"
+          aria-pressed={locale === 'es'}
         >
           ES
         </button>
@@ -271,7 +273,7 @@ export function UnderConstruction() {
       </header>
 
       {/* Main Hero Content */}
-      <main className="relative z-10 flex min-h-[calc(100vh-100px)] flex-col justify-end px-6 pb-16 pt-20 md:px-16 md:pb-24 lg:pb-28">
+      <div className="relative z-10 flex min-h-[calc(100vh-100px)] flex-col justify-end px-6 pb-16 pt-20 md:px-16 md:pb-24 lg:pb-28">
         <div className="max-w-4xl">
           {/* Eyebrow / Tagline */}
           <div className="flex items-center gap-4 mb-6">
@@ -313,7 +315,7 @@ export function UnderConstruction() {
             </button>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Mobile Status Dot Indicator */}
       <div className="md:hidden relative z-10 px-6 pb-8 flex items-center gap-2">
@@ -329,6 +331,9 @@ export function UnderConstruction() {
       {isModalOpen && (
         <div
           ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
           className="fixed inset-0 z-50 overflow-y-auto bg-[#F3EFE7] text-[#191512] flex flex-col justify-between"
           style={{ willChange: 'clip-path' }}
         >
@@ -375,7 +380,7 @@ export function UnderConstruction() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
                 {/* Left Column: Stay Close Heading & Subtitle */}
                 <div className="lg:col-span-6 space-y-6">
-                  <h2 className="modal-anim font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[7.5rem] font-normal text-[#191512] leading-[0.95] tracking-tight">
+                  <h2 id="modal-title" className="modal-anim font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[7.5rem] font-normal text-[#191512] leading-[0.95] tracking-tight">
                     {t('modalTitle')}
                   </h2>
                   <p className="modal-anim text-base sm:text-lg md:text-xl text-[#524940] font-light leading-relaxed max-w-md pt-2">
@@ -391,17 +396,19 @@ export function UnderConstruction() {
 
                   {!submitted ? (
                     <form onSubmit={handleSubmit} className="modal-anim space-y-4">
-                      <label className="block text-[11px] font-bold tracking-[0.2em] uppercase text-[#736555]">
+                      <label htmlFor="subscribe-email" className="block text-[11px] font-bold tracking-[0.2em] uppercase text-[#736555]">
                         {t('modalFormLabel')}
                       </label>
 
                       <div className="relative flex items-center border-b border-[#A69988] pb-3 pt-1 transition-colors duration-300 focus-within:border-[#191512]">
                         <input
+                          id="subscribe-email"
                           type="email"
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder={t('modalPlaceholder')}
+                          autoComplete="email"
                           className="w-full bg-transparent text-base sm:text-lg text-[#191512] placeholder-[#9E9182] outline-none font-light"
                         />
                         <button

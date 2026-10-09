@@ -3,10 +3,10 @@ import { cn } from '@/lib/utils';
 
 export function BrandPattern({ className }: { className?: string }) {
   return (
-    <div className={cn('absolute inset-0 z-0', className)}>
+    <div className={cn('absolute inset-0 z-0', className)} aria-hidden="true">
       <Image
         src="/brand-pattern.svg"
-        alt="Brand Pattern"
+        alt=""
         fill
         className="object-cover"
         priority

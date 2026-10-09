@@ -1,57 +1,95 @@
-'use client'
+import type { Metadata } from 'next'
+import { setRequestLocale } from 'next-intl/server'
+import { locales } from '@/i18n/routing'
+import { CollectionsView } from '@/components/collections-view'
+import { JsonLd } from '@/components/json-ld'
 
-import Image from 'next/image'
-import { useTranslations } from 'next-intl'
-import { PageHeader } from '@/components/page-header'
+interface PageProps {
+  params: Promise<{ locale: string }>
+}
 
-export default function CollectionsPage() {
-  const t = useTranslations('products')
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }))
+}
 
-  const rawItems = t.raw('items') as Array<{ name: string; body: string }>
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
+
+  const title = isSpanish
+    ? "Colecciones — Calzado y Artículos de Piel Hechos para Perdurar | Lyon's Artisans"
+    : "Collections — Footwear & Leather Goods Made to Endure | Lyon's Artisans"
+
+  const description = isSpanish
+    ? "Explora nuestras categorías de manufactura: Derby, Mocasines, Sneakers minimalistas, Botas y Marroquinería de alta gama con acabados artesanales."
+    : "Explore our manufacturing capabilities: Dress shoes, Loafers, Minimal Sneakers, Handcrafted Boots, and Bespoke Leather Goods."
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${baseUrl}/${locale}/collections`,
+      languages: {
+        en: `${baseUrl}/en/collections`,
+        es: `${baseUrl}/es/collections`,
+        'x-default': `${baseUrl}/en/collections`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/${locale}/collections`,
+      siteName: "Lyon's Artisans",
+      locale: isSpanish ? 'es_MX' : 'en_US',
+      type: 'website',
+      images: [
+        {
+          url: '/images/collection-dress.png',
+          width: 1200,
+          height: 630,
+          alt: "Lyon's Artisans Collections",
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/images/collection-dress.png'],
+    },
+  }
+}
+
+export default async function CollectionsPage({ params }: PageProps) {
+  const { locale } = await params
+  setRequestLocale(locale)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: isSpanish ? 'Inicio' : 'Home',
+        item: `${baseUrl}/${locale}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: isSpanish ? 'Colecciones' : 'Collections',
+        item: `${baseUrl}/${locale}/collections`,
+      },
+    ],
+  }
 
   return (
-    <article>
-      <PageHeader eyebrow={t('eyebrow')} title={t('title')} lead={t('lead')} />
-
-      <section className="mx-auto max-w-7xl px-5 pb-24 md:px-8 md:pb-32">
-        <div className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-          {rawItems.map((item, i) => {
-            const images = [
-              '/images/collection-dress.png',
-              '/images/collection-loafers.png',
-              '/images/collection-sneakers.png',
-              '/images/collection-boots.png',
-              '/images/collection-accessories.png',
-              '/images/collection-bespoke.png',
-            ]
-
-            return (
-              <article key={item.name} className="group flex flex-col">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-muted">
-                  <Image
-                    src={
-                      images[i] ||
-                      `/placeholder.svg?height=1000&width=800&query=premium%20leather%20footwear%20${i + 1}`
-                    }
-                    alt={item.name}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                </div>
-                <h2 className="mt-5 font-serif text-2xl">{item.name}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {item.body}
-                </p>
-              </article>
-            )
-          })}
-        </div>
-
-        <p className="mt-20 max-w-2xl border-t border-border pt-6 text-sm leading-relaxed text-muted-foreground">
-          {t('note')}
-        </p>
-      </section>
-    </article>
+    <>
+      <JsonLd data={breadcrumbSchema} />
+      <CollectionsView />
+    </>
   )
 }

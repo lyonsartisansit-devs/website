@@ -1,172 +1,182 @@
-'use client'
+import type { Metadata } from 'next'
+import { setRequestLocale } from 'next-intl/server'
+import { locales } from '@/i18n/routing'
+import { ProcessView } from '@/components/process-view'
+import { JsonLd } from '@/components/json-ld'
 
-import Image from 'next/image'
-import { ArrowDown, Box, Lightbulb, Shapes, Scissors, MoveDiagonal, Wrench, Paintbrush, ShieldCheck, Package } from 'lucide-react'
-import { useTranslations } from 'next-intl'
-import { Link } from '@/i18n/routing'
-import { PageHeader } from '@/components/page-header'
-import { FloatingProcessNav } from '@/components/floating-process-nav'
-import { cn } from '@/lib/utils'
+interface PageProps {
+  params: Promise<{ locale: string }>
+}
 
-import { BrandValuePills } from '@/components/brand-value-pills'
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }))
+}
 
-export default function ProcessPage() {
-  const t = useTranslations('process')
-  const tNav = useTranslations('nav')
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
 
-  type StepItem = {
-    no: string
-    title: string
-    tagline: string
-    body: string
-    values: string[]
+  const title = isSpanish
+    ? "Nuestro Proceso — 9 Etapas de Manufactura Artesanal | Lyon's Artisans"
+    : "Our Process — 9 Essential Stages of Handcrafted Footwear | Lyon's Artisans"
+
+  const description = isSpanish
+    ? "Desde la primera selección de pieles hasta la entrega internacional: conoce las 9 etapas donde la destreza artesanal y la ingeniería moderna se unen en León, México."
+    : "From raw material selection to international distribution: discover the 9 stages where human craftsmanship meets modern engineering in León, México."
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${baseUrl}/${locale}/process`,
+      languages: {
+        en: `${baseUrl}/en/process`,
+        es: `${baseUrl}/es/process`,
+        'x-default': `${baseUrl}/en/process`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/${locale}/process`,
+      siteName: "Lyon's Artisans",
+      locale: isSpanish ? 'es_MX' : 'en_US',
+      type: 'website',
+      images: [
+        {
+          url: '/images/process-1.png',
+          width: 1200,
+          height: 630,
+          alt: "Lyon's Artisans Manufacturing Process",
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/images/process-1.png'],
+    },
+  }
+}
+
+export default async function ProcessPage({ params }: PageProps) {
+  const { locale } = await params
+  setRequestLocale(locale)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lyonsartisans.mx'
+  const isSpanish = locale === 'es'
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: isSpanish ? 'Inicio' : 'Home',
+        item: `${baseUrl}/${locale}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: isSpanish ? 'Nuestro Proceso' : 'Our Process',
+        item: `${baseUrl}/${locale}/process`,
+      },
+    ],
   }
 
-  const rawSteps = t.raw('steps') as StepItem[]
-
-  const getIcon = (index: number) => {
-    switch (index) {
-      case 0: return <Box className="w-6 h-6 stroke-[1.5]" />
-      case 1: return <Lightbulb className="w-6 h-6 stroke-[1.5]" />
-      case 2: return <Shapes className="w-6 h-6 stroke-[1.5]" />
-      case 3: return <Scissors className="w-6 h-6 stroke-[1.5]" />
-      case 4: return <MoveDiagonal className="w-6 h-6 stroke-[1.5]" />
-      case 5: return <Wrench className="w-6 h-6 stroke-[1.5]" />
-      case 6: return <Paintbrush className="w-6 h-6 stroke-[1.5]" />
-      case 7: return <ShieldCheck className="w-6 h-6 stroke-[1.5]" />
-      case 8: return <Package className="w-6 h-6 stroke-[1.5]" />
-      default: return <Box className="w-6 h-6 stroke-[1.5]" />
-    }
+  const howToSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: isSpanish
+      ? 'Proceso de Manufactura de Calzado y Artículos de Piel'
+      : 'Handcrafted Footwear & Leather Goods Manufacturing Process',
+    description: isSpanish
+      ? 'Nueve etapas esenciales donde la tradición artesanal se encuentra con la innovación y precisión técnica.'
+      : 'Nine essential stages where bespoke shoemaking traditions meet modern technical precision.',
+    totalTime: 'P14D',
+    step: [
+      {
+        '@type': 'HowToStep',
+        position: 1,
+        name: isSpanish ? 'Selección y Evaluación de Materiales' : 'Material Selection & Evaluation',
+        text: isSpanish
+          ? 'Selección rigurosa de pieles y componentes premium.'
+          : 'Careful selection and evaluation of premium leathers and components.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 2,
+        name: isSpanish ? 'Desarrollo de Producto e Ingeniería' : 'Product Development & Engineering',
+        text: isSpanish
+          ? 'Diseño para el confort, la eficiencia y la precisión.'
+          : 'Designing for comfort, efficiency, and engineering precision.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 3,
+        name: isSpanish ? 'Patronaje y Optimización Digital' : 'Pattern Making & Digital Optimization',
+        text: isSpanish
+          ? 'Patronaje digital para precisión y sustentabilidad.'
+          : 'Digital pattern-making to optimize leather consumption and consistency.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 4,
+        name: isSpanish ? 'Proceso de Corte' : 'Cutting Process',
+        text: isSpanish
+          ? 'Tecnología de corte Teseo con supervisión artesanal.'
+          : 'Advanced Teseo cutting technology supervised by experienced craftsmen.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 5,
+        name: isSpanish ? 'Costura y Construcción del Corte' : 'Stitching & Upper Construction',
+        text: isSpanish
+          ? 'Destreza artesanal en cada costura y unión.'
+          : 'Artisan upper assembly with precision developed over decades.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 6,
+        name: isSpanish ? 'Montado y Ensamblaje' : 'Lasting & Assembly',
+        text: isSpanish
+          ? 'Técnicas tradicionales de montado a mano para un ajuste superior.'
+          : 'Traditional handcrafted lasting techniques for superior shape and comfort.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 7,
+        name: isSpanish ? 'Acabado y Detallado a Mano' : 'Finishing & Hand Detailing',
+        text: isSpanish
+          ? 'Pulido, refinación y acabado individual por pieza.'
+          : 'Inspection, cleaning, polishing, and hand detailing before final approval.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 8,
+        name: isSpanish ? 'Control de Calidad' : 'Quality Control',
+        text: isSpanish
+          ? 'Múltiples filtros de inspección a lo largo del proceso.'
+          : 'Pair-by-pair inspection ensuring international export standards.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 9,
+        name: isSpanish ? 'Empaque y Logística Internacional' : 'Packaging & International Logistics',
+        text: isSpanish
+          ? 'Procedimientos de exportación y distribución global eficiente.'
+          : 'Organized export procedures and worldwide delivery standards.',
+      },
+    ],
   }
 
   return (
-    <article>
-      <PageHeader eyebrow={t('eyebrow')} title={t('title')} lead={t('lead')} />
-
-      {/* The Sequence Grid Section */}
-      <section className="min-h-screen flex flex-col border-y border-border bg-card">
-        {/* Header */}
-        <div className="flex-none px-5 py-12 md:px-12 md:py-16 border-b border-border flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
-          <div className="max-w-xl">
-            <p className="font-subheading text-xs uppercase tracking-[0.3em] text-primary">
-              {t('sequenceLabel')}
-            </p>
-            <h2 className="mt-6 text-balance font-serif text-5xl font-light leading-[1.1] md:text-6xl lg:text-7xl whitespace-pre-line">
-              {t('sequenceTitle')}
-            </h2>
-          </div>
-          <div className="max-w-xs flex flex-col items-start md:items-end text-left md:text-right gap-6">
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {t('sequenceSubtitle')}
-            </p>
-            <button
-              onClick={() => document.getElementById('step-01')?.scrollIntoView({ behavior: 'smooth' })}
-              className="flex h-14 w-14 items-center justify-center rounded-full border border-border text-foreground transition-all hover:bg-border hover:scale-105 active:scale-95 cursor-pointer"
-              aria-label={t('scrollAria')}
-            >
-              <ArrowDown className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* 3x3 Grid */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {rawSteps.map((step, index) => (
-            <button
-              key={step.no}
-              onClick={() => document.getElementById(`step-${step.no}`)?.scrollIntoView({ behavior: 'smooth' })}
-              className={cn(
-                'group relative flex flex-col p-8 md:p-10 text-left transition-colors hover:bg-muted/30 border-b border-border cursor-pointer',
-                index % 3 !== 2 && 'lg:border-r',
-                index % 2 === 0 && 'md:border-r lg:border-r-0'
-              )}
-            >
-              <div className="mb-16 text-muted-foreground group-hover:text-primary transition-all duration-300 ease-out origin-left group-hover:scale-125">
-                {getIcon(index)}
-              </div>
-
-              <div className="flex items-center gap-4 mb-5">
-                <span className="font-serif text-5xl text-primary/90 tracking-tighter">
-                  <span className="opacity-40">&middot;</span> {step.no}
-                </span>
-                <h3 className="font-subheading text-[10px] sm:text-xs tracking-[0.2em] uppercase leading-relaxed max-w-[120px]">
-                  {step.title}
-                </h3>
-              </div>
-
-              <p className="text-sm leading-relaxed text-muted-foreground/80 max-w-[280px]">
-                {step.tagline}
-              </p>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Steps */}
-      <section className="mx-auto max-w-7xl px-5 md:px-8">
-        {rawSteps.map((step, i) => (
-          <div
-            key={step.no}
-            id={`step-${step.no}`}
-            className="grid scroll-mt-28 items-start gap-8 border-b border-border py-16 md:grid-cols-12 md:gap-12 md:py-24"
-          >
-            <div className="md:col-span-5">
-              <div
-                className={`relative aspect-[4/3] overflow-hidden rounded-sm ${
-                  i % 2 === 1 ? 'md:order-last' : ''
-                }`}
-              >
-                <Image
-                  src={`/images/process-${i + 1}.png`}
-                  alt={step.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 40vw"
-                  className="object-cover"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-5 md:col-span-7 md:pt-2">
-              <div className="flex items-baseline gap-4">
-                <span className="font-serif text-5xl font-light text-primary/40 md:text-6xl">
-                  {step.no}
-                </span>
-                <span className="h-px flex-1 bg-border" aria-hidden />
-              </div>
-              <div>
-                <h2 className="text-balance font-serif text-3xl font-light leading-tight md:text-4xl">
-                  {step.title}
-                </h2>
-                <p className="mt-3 font-serif text-lg italic text-primary/80">
-                  {step.tagline}
-                </p>
-              </div>
-              <p className="max-w-2xl text-pretty leading-relaxed text-foreground/80">
-                {step.body}
-              </p>
-              <BrandValuePills
-                label={t('valuesLabel')}
-                values={step.values}
-              />
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* CTA */}
-      <section className="mx-auto max-w-5xl px-5 py-24 text-center md:px-8 md:py-32">
-        <p className="text-balance font-serif text-2xl font-light leading-snug md:text-4xl">
-          {t('quote')}
-        </p>
-        <Link
-          href="/contact"
-          className="mt-10 inline-block rounded-sm bg-foreground px-8 py-3 text-sm tracking-wide text-background transition-opacity hover:opacity-90"
-        >
-          {tNav('enquire')}
-        </Link>
-      </section>
-
-      <FloatingProcessNav steps={rawSteps} />
-    </article>
+    <>
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={howToSchema} />
+      <ProcessView />
+    </>
   )
 }
