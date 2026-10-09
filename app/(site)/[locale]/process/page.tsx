@@ -8,6 +8,8 @@ import { PageHeader } from '@/components/page-header'
 import { FloatingProcessNav } from '@/components/floating-process-nav'
 import { cn } from '@/lib/utils'
 
+import { BrandValuePills } from '@/components/brand-value-pills'
+
 export default function ProcessPage() {
   const t = useTranslations('process')
   const tNav = useTranslations('nav')
@@ -79,7 +81,7 @@ export default function ProcessPage() {
                 index % 2 === 0 && 'md:border-r lg:border-r-0'
               )}
             >
-              <div className="mb-16 text-muted-foreground group-hover:text-primary transition-colors">
+              <div className="mb-16 text-muted-foreground group-hover:text-primary transition-all duration-300 ease-out origin-left group-hover:scale-125">
                 {getIcon(index)}
               </div>
 
@@ -142,21 +144,10 @@ export default function ProcessPage() {
               <p className="max-w-2xl text-pretty leading-relaxed text-foreground/80">
                 {step.body}
               </p>
-              <div className="mt-2">
-                <p className="font-subheading text-xs uppercase tracking-[0.28em] text-muted-foreground">
-                  {t('valuesLabel')}
-                </p>
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {step.values.map((v) => (
-                    <li
-                      key={v}
-                      className="rounded-full border border-border px-3 py-1 text-xs tracking-wide text-foreground/70"
-                    >
-                      {v}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <BrandValuePills
+                label={t('valuesLabel')}
+                values={step.values}
+              />
             </div>
           </div>
         ))}

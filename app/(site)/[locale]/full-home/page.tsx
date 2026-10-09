@@ -23,6 +23,11 @@ export default function FullHomePage() {
 
   const rawPillars = t.raw('pillars') as Array<{ no: string; title: string; body: string }>
   const rawStats = t.raw('stats') as Array<{ value: string; label: string }>
+  const statImages = [
+    '/images/about-hero.png',
+    '/images/craft-hero.png',
+    '/images/process-6.png',
+  ]
 
   useGSAP(
     () => {
@@ -180,40 +185,110 @@ export default function FullHomePage() {
         ease: 'sine.inOut',
       })
 
-      // Animación Stats
-      const tlStats = gsap.timeline({
-        scrollTrigger: {
-          trigger: '.stats-section',
-          start: 'top 100%',
-          end: 'bottom 10%',
-          scrub: 3,
-        },
+      // Animaciones Stats con MatchMedia para Desktop y Mobile
+      const mm = gsap.matchMedia()
+
+      // 1. Desktop (>= 768px): Las 3 columnas se animan con stagger sincronizado al estar 100% visible
+      mm.add('(min-width: 768px)', () => {
+        const tlStats = gsap.timeline({
+          scrollTrigger: {
+            trigger: '#stats-trigger',
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 1,
+          },
+        })
+
+        tlStats
+          .fromTo(
+            '.stats-title',
+            { opacity: 0, y: 10 },
+            { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }
+          )
+          .fromTo(
+            '.stat-line',
+            { width: '0%' },
+            { width: '100%', duration: 0.5, ease: 'power2.inOut', stagger: 0.3 },
+            '-=0.2'
+          )
+          .fromTo(
+            '.stat-text',
+            { yPercent: -100, opacity: 0 },
+            {
+              yPercent: 0,
+              opacity: 1,
+              duration: 0.6,
+              ease: 'power2.out',
+              stagger: 0.3,
+            },
+            '<0.2'
+          )
+          .fromTo(
+            '.stat-image',
+            { yPercent: 100, opacity: 0 },
+            {
+              yPercent: 0,
+              opacity: 1,
+              duration: 0.6,
+              ease: 'power2.out',
+              stagger: 0.3,
+            },
+            '>'
+          )
       })
 
-      tlStats
-        .fromTo(
+      // 2. Mobile (< 768px): Animación individual por cada stat (Línea -> Texto -> Imagen) y luego pasa a la siguiente
+      mm.add('(max-width: 767px)', () => {
+        gsap.fromTo(
           '.stats-title',
           { opacity: 0, y: 10 },
-          { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }
-        )
-        .fromTo(
-          '.stat-line',
-          { width: '0%' },
-          { width: '100%', duration: 0.5, ease: 'power2.inOut', stagger: 0.3 },
-          '-=0.2'
-        )
-        .fromTo(
-          '.stat-text',
-          { yPercent: -100, opacity: 0 },
           {
-            yPercent: 0,
             opacity: 1,
-            duration: 0.6,
+            y: 0,
+            duration: 0.5,
             ease: 'power2.out',
-            stagger: 0.3,
-          },
-          '<0.2'
+            scrollTrigger: {
+              trigger: '.stats-title',
+              start: 'top 90%',
+            },
+          }
         )
+
+        const cards = gsap.utils.toArray<HTMLElement>('.stat-card')
+        cards.forEach((card) => {
+          const line = card.querySelector('.stat-line')
+          const text = card.querySelector('.stat-text')
+          const image = card.querySelector('.stat-image')
+
+          const tlCard = gsap.timeline({
+            scrollTrigger: {
+              trigger: card,
+              start: 'top 80%',
+              end: 'top 30%',
+              scrub: 1,
+            },
+          })
+
+          tlCard
+            .fromTo(
+              line,
+              { width: '0%' },
+              { width: '100%', duration: 0.4, ease: 'power2.inOut' }
+            )
+            .fromTo(
+              text,
+              { yPercent: -100, opacity: 0 },
+              { yPercent: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+              '<0.1'
+            )
+            .fromTo(
+              image,
+              { yPercent: 100, opacity: 0 },
+              { yPercent: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+              '>'
+            )
+        })
+      })
 
       return () => window.removeEventListener('introReady', playIntro)
     },
@@ -413,30 +488,48 @@ export default function FullHomePage() {
       </div>
 
       {/* Stats */}
-      <section className="stats-section relative z-10 -mt-[100vh] sticky top-0 flex min-h-screen w-full flex-col justify-center border-y border-border bg-card">
-        <div className="mx-auto max-w-7xl px-5 py-20 md:px-8 md:py-24">
-          <p className="stats-title font-subheading text-xs uppercase tracking-[0.3em] text-primary">
-            {t('statsLabel')}
-          </p>
-          <div className="mt-10 grid gap-10 md:grid-cols-3 md:gap-8">
-            {rawStats.map((s) => (
-              <div key={s.label} className="stat-card relative">
-                <div className="stat-line absolute top-0 left-0 h-px bg-border w-full origin-left" />
-                <div className="overflow-hidden">
-                  <div className="stat-text flex flex-col gap-3 pt-6 pb-2">
-                    <span className="font-serif text-4xl font-light md:text-5xl">
-                      {s.value}
-                    </span>
-                    <span className="text-sm leading-relaxed text-muted-foreground">
-                      {s.label}
-                    </span>
+      <div id="stats-trigger" className="stats-wrapper w-full md:h-[200vh] relative z-10">
+        <section className="stats-section md:sticky md:top-0 flex md:min-h-screen w-full flex-col justify-center border-y border-border bg-card">
+          <div className="mx-auto max-w-7xl px-5 py-20 md:px-8 md:py-24">
+            <p className="stats-title font-subheading text-xs uppercase tracking-[0.3em] text-primary">
+              {t('statsLabel')}
+            </p>
+            <div className="mt-10 grid gap-10 md:grid-cols-3 md:gap-8">
+              {rawStats.map((s, index) => (
+                <div key={s.label} className="stat-card relative flex flex-col">
+                  {/* Imagen rectangular vertical saliendo de la línea hacia arriba */}
+                  <div className="overflow-hidden pb-4">
+                    <div className="stat-image relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-muted/30">
+                      <Image
+                        src={statImages[index % statImages.length]}
+                        alt={s.label}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Línea divisoria y texto */}
+                  <div className="relative">
+                    <div className="stat-line absolute top-0 left-0 h-px bg-border w-full origin-left" />
+                    <div className="overflow-hidden">
+                      <div className="stat-text flex flex-col gap-3 pt-6 pb-2">
+                        <span className="font-serif text-4xl font-light md:text-5xl">
+                          {s.value}
+                        </span>
+                        <span className="text-sm leading-relaxed text-muted-foreground">
+                          {s.label}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* CTA */}
       <section className="sticky top-0 flex min-h-screen w-full flex-col justify-center bg-background">
