@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link, usePathname, useRouter, type Locale } from '@/i18n/routing'
-import { Menu, X } from 'lucide-react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { cn } from '@/lib/utils'
@@ -17,6 +16,8 @@ export function SiteHeader() {
   const { translations } = useTranslationsContext()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
 
   const isComingSoon =
     process.env.NEXT_PUBLIC_COMING_SOON === 'true' ||
@@ -24,13 +25,9 @@ export function SiteHeader() {
     pathname.includes('/coming-soon') ||
     pathname.includes('/under-construction')
 
-  if (isComingSoon) {
-    return null
-  }
-
   const isHome = pathname === '/' || pathname === ''
+  // When mobile menu is open, force solid background for continuous curtain effect
   const isTransparent = isHome && !scrolled && !open
-  const headerRef = useRef<HTMLElement>(null)
 
   useGSAP(
     () => {
@@ -75,10 +72,60 @@ export function SiteHeader() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [isHome])
 
+  // Close menu on route change
   useEffect(() => {
     setOpen(false)
   }, [pathname])
 
+  // Close menu on resize to >= 980px
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 980px)')
+    const handleMediaChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) {
+        setOpen(false)
+      }
+    }
+
+    mql.addEventListener('change', handleMediaChange)
+    return () => mql.removeEventListener('change', handleMediaChange)
+  }, [])
+
+  // Keyboard accessibility: ESC key closes menu and focuses toggle button
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) {
+        setOpen(false)
+        toggleRef.current?.focus()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [open])
+
+  // Lock scroll while mobile menu is open
+  useEffect(() => {
+    if (open) {
+      const originalOverflow = document.documentElement.style.overflow
+      document.documentElement.style.overflow = 'hidden'
+      return () => {
+        document.documentElement.style.overflow = originalOverflow
+      }
+    }
+  }, [open])
+
+  // Safety scroll restoration on unmount
+  useEffect(() => {
+    return () => {
+      document.documentElement.style.overflow = ''
+    }
+  }, [])
+
+  if (isComingSoon) {
+    return null
+  }
+
+  // Single source of truth for all links
   const links = [
     { href: '/who-we-are', label: t('about') },
     { href: '/process', label: t('process') },
@@ -90,6 +137,8 @@ export function SiteHeader() {
 
   const handleLanguageChange = (targetLocale: Locale) => {
     if (targetLocale === locale) return
+
+    setOpen(false)
 
     // Detail page logic: pathname is /journal/[slug]
     const isJournalDetail = pathname.startsWith('/journal/') && pathname !== '/journal'
@@ -114,21 +163,62 @@ export function SiteHeader() {
     router.replace(pathname as any, { locale: targetLocale })
   }
 
+  const emailAddress = locale === 'es' ? 'hola@lyonsartisans.mx' : 'hello@lyonsartisans.mx'
+  const toggleLabel = open ? t('closeMenu') : t('openMenu')
+
   return (
     <header
       ref={headerRef}
       className={cn(
         'fixed inset-x-0 top-0 z-50 transition-colors duration-300',
-        !isTransparent
-          ? 'border-b border-border bg-background/90 backdrop-blur-md text-foreground'
-          : 'border-b border-transparent text-[#f3ede5]'
+        open
+          ? 'bg-[#f4eee8] text-[#26272a]'
+          : !isTransparent
+            ? 'border-b border-border bg-background/90 backdrop-blur-md text-foreground'
+            : 'border-b border-transparent text-[#f3ede5]'
       )}
     >
-      <div className="w-full grid h-16 grid-cols-[1fr_auto_1fr] items-center px-4 md:h-20 md:px-8">
-        {/* Left - Navigation Links */}
+      {/* ========================================================================= */}
+      {/* 1. MOBILE NAVBAR BAR (< 980px: 64px height, Logo Left, Toggle Right)       */}
+      {/* ========================================================================= */}
+      <div className="flex h-16 w-full items-center justify-between px-5 min-[980px]:hidden">
+        {/* Left: Brand Logo */}
+        <Link
+          href="/"
+          className="flex items-center h-full"
+          aria-label="Lyon's Artisans home"
+          onClick={() => setOpen(false)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={isTransparent ? '/logo-STONE.svg' : '/logo-noir-2.svg'}
+            alt="Lyon's Artisans"
+            className="h-10 sm:h-12 w-auto max-w-[180px] sm:max-w-[200px] object-contain transition-all duration-300"
+          />
+        </Link>
+
+        {/* Right: Hamburger Button (44x44px touch target) */}
+        <button
+          ref={toggleRef}
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="nav__toggle"
+          aria-label={toggleLabel}
+          aria-expanded={open}
+          aria-controls="mobile-menu"
+        >
+          <span />
+          <span />
+        </button>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. DESKTOP NAVBAR (≥ 980px: 80px height, 3-Column Layout)                  */}
+      {/* ========================================================================= */}
+      <div className="hidden w-full h-20 grid-cols-[1fr_auto_1fr] items-center px-4 md:px-8 min-[980px]:grid">
+        {/* Left - Navigation Links (First 4 links) */}
         <div className="flex w-full justify-start items-center">
-          {/* Desktop Nav */}
-          <nav className="hidden items-center justify-start gap-6 lg:gap-10 md:flex">
+          <nav className="flex items-center justify-start gap-6 lg:gap-10">
             {links.slice(0, 4).map((link) => (
               <Link
                 key={link.href}
@@ -139,29 +229,17 @@ export function SiteHeader() {
                     ? 'text-foreground/70 hover:text-foreground'
                     : 'text-[#f3ede5]/70 hover:text-[#f3ede5]',
                   pathname === link.href &&
-                    (!isTransparent ? 'text-foreground' : 'text-[#f3ede5]')
+                    (!isTransparent ? 'text-foreground font-semibold' : 'text-[#f3ede5] font-semibold')
                 )}
+                aria-current={pathname === link.href ? 'page' : undefined}
               >
                 {link.label}
               </Link>
             ))}
           </nav>
-          {/* Mobile Menu Toggle */}
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className={cn(
-              'nav-animate inline-flex size-9 items-center justify-start md:hidden transition-colors cursor-pointer',
-              !isTransparent ? 'text-foreground' : 'text-[#f3ede5]'
-            )}
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            aria-expanded={open}
-          >
-            {open ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
         </div>
 
-        {/* Center - Logo */}
+        {/* Center - Centered Logo */}
         <div className="flex justify-center px-4">
           <Link
             href="/"
@@ -179,7 +257,7 @@ export function SiteHeader() {
 
         {/* Right - Utilities & Secondary Nav */}
         <div className="flex w-full items-center justify-end">
-          <nav className="hidden items-center justify-end gap-6 lg:gap-10 md:flex">
+          <nav className="flex items-center justify-end gap-6 lg:gap-10">
             {links.slice(4, 6).map((link) => (
               <Link
                 key={link.href}
@@ -190,8 +268,9 @@ export function SiteHeader() {
                     ? 'text-foreground/70 hover:text-foreground'
                     : 'text-[#f3ede5]/70 hover:text-[#f3ede5]',
                   pathname === link.href &&
-                    (!isTransparent ? 'text-foreground' : 'text-[#f3ede5]')
+                    (!isTransparent ? 'text-foreground font-semibold' : 'text-[#f3ede5] font-semibold')
                 )}
+                aria-current={pathname === link.href ? 'page' : undefined}
               >
                 {link.label}
               </Link>
@@ -217,34 +296,88 @@ export function SiteHeader() {
               {t('enquire')}
             </Link>
           </nav>
-
-          {/* Mobile Lang Toggle */}
-          <div className="nav-animate md:hidden ml-auto">
-            <LangToggle
-              currentLocale={locale}
-              onSelectLocale={handleLanguageChange}
-              isDark={isTransparent}
-            />
-          </div>
         </div>
       </div>
 
-      {open && (
-        <nav className="border-t border-border bg-background px-5 pb-8 pt-4 md:hidden">
-          <ul className="flex flex-col">
-            {links.map((link) => (
-              <li key={link.href}>
+      {/* ========================================================================= */}
+      {/* 3. MOBILE MENU PANEL (< 980px Curtain Panel with Masked Links)             */}
+      {/* ========================================================================= */}
+      <div
+        id="mobile-menu"
+        className={cn('menu', open && 'is-open')}
+      >
+        {/* Main Links (First 5 links) */}
+        <ul className="menu__list">
+          {links.slice(0, 5).map((link, index) => {
+            const isCurrent = pathname === link.href
+            return (
+              <li key={link.href} style={{ '--i': index } as React.CSSProperties}>
                 <Link
                   href={link.href as any}
-                  className="block border-b border-border/60 py-4 font-serif text-2xl"
+                  className="menu__link"
+                  aria-current={isCurrent ? 'page' : undefined}
+                  onClick={() => setOpen(false)}
                 >
                   {link.label}
                 </Link>
               </li>
-            ))}
-          </ul>
-        </nav>
-      )}
+            )
+          })}
+        </ul>
+
+        {/* Footer: Language Switcher, Email & Full Width Solid Contact CTA */}
+        <div className="menu__foot">
+          <div className="menu__row">
+            {/* Language Switcher */}
+            <div className="flex items-center text-xs tracking-widest text-[#6b6762]">
+              <button
+                type="button"
+                onClick={() => handleLanguageChange('en')}
+                className={cn(
+                  'px-1.5 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#26272a]',
+                  locale === 'en'
+                    ? 'text-[#26272a] font-bold underline underline-offset-4'
+                    : 'text-[#6b6762] hover:text-[#26272a]'
+                )}
+                aria-pressed={locale === 'en'}
+              >
+                EN
+              </button>
+              <span className="text-[#dcd5ca]">/</span>
+              <button
+                type="button"
+                onClick={() => handleLanguageChange('es')}
+                className={cn(
+                  'px-1.5 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#26272a]',
+                  locale === 'es'
+                    ? 'text-[#26272a] font-bold underline underline-offset-4'
+                    : 'text-[#6b6762] hover:text-[#26272a]'
+                )}
+                aria-pressed={locale === 'es'}
+              >
+                ES
+              </button>
+            </div>
+
+            {/* Email Link */}
+            <a
+              href={`mailto:${emailAddress}`}
+              className="menu__mail"
+            >
+              {emailAddress}
+            </a>
+          </div>
+
+          {/* Full-width Solid Contact CTA */}
+          <Link
+            href="/contact"
+            onClick={() => setOpen(false)}
+            className="menu__cta"
+          >
+            {t('enquire')}
+          </Link>
+        </div>
+      </div>
     </header>
   )
 }
@@ -269,7 +402,7 @@ function LangToggle({
         type="button"
         onClick={() => onSelectLocale('en')}
         className={cn(
-          'px-1.5 transition-colors cursor-pointer',
+          'px-1.5 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-current',
           isDark ? 'hover:text-[#f3ede5]' : 'hover:text-foreground',
           currentLocale === 'en' && (isDark ? 'text-[#f3ede5] font-semibold' : 'text-foreground font-semibold')
         )}
@@ -287,7 +420,7 @@ function LangToggle({
         type="button"
         onClick={() => onSelectLocale('es')}
         className={cn(
-          'px-1.5 transition-colors cursor-pointer',
+          'px-1.5 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-current',
           isDark ? 'hover:text-[#f3ede5]' : 'hover:text-foreground',
           currentLocale === 'es' && (isDark ? 'text-[#f3ede5] font-semibold' : 'text-foreground font-semibold')
         )}

@@ -7,7 +7,9 @@
     "products": "Colecciones",
     "contact": "Contacto",
     "enquire": "Contactar",
-    "blog": "Diario"
+    "blog": "Diario",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
   },
   "home": {
     "heroEyebrow": "León, México · Manufactura",

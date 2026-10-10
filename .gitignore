@@ -16,3 +16,6 @@ node_modules
 
 # build info
 *.tsbuildinfo
+
+#test
+test-results/

@@ -7,7 +7,9 @@
     "products": "Collections",
     "contact": "Contact",
     "enquire": "Enquire",
-    "blog": "Journal"
+    "blog": "Journal",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "home": {
     "heroEyebrow": "León, México · Est. Manufacture",
