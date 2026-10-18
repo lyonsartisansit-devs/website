@@ -8,11 +8,13 @@ import { schemaTypes } from './sanity/schemaTypes'
 import { structure } from './sanity/structure'
 import { projectId, dataset } from './sanity/lib/env'
 import { supportedLanguages } from './i18n/routing'
+import { StudioIcon } from './sanity/components/studio-icon'
 
 export default defineConfig({
   basePath: '/studio',
   name: 'lyons-artisans-journal-studio',
   title: "Lyon's Artisans — Studio",
+  icon: StudioIcon,
 
   projectId,
   dataset,

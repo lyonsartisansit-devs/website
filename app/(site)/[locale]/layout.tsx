@@ -85,6 +85,14 @@ export async function generateMetadata({
       description,
       images: ['/images/hero.png'],
     },
+    icons: {
+      icon: [
+        { url: '/favicon.svg', type: 'image/svg+xml' },
+        { url: '/favicon.ico', sizes: 'any' },
+      ],
+      shortcut: '/favicon.svg',
+      apple: '/favicon.svg',
+    },
   }
 }
 
